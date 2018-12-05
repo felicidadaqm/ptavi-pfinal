@@ -8,30 +8,34 @@ import socket
 import sys
 from datetime import datetime, timedelta
 import os.path
-from xml.sax import make_parser
-from xml.sax.handler import ContentHandler
+import xml.etree.ElementTree as ET
+
+class UAClient:
+    xml_dicc = {}
+
+    def config(self):
+    # SACO LA CONFIGURACIÓN DE XML
+        tree = ET.parse('ua1.xml')
+        root = tree.getroot()
+        for branch in root:
+            self.xml_dicc[str(branch.tag)] = branch.attrib
+        print(self.xml_dicc)
+        return self.xml_dicc
+
+    def building_sip(self):
+    # SACO LO QUE NECESITO, FALTA MONTAR SIP
+        self.config()
+
+        username = str(self.xml_dicc['account']['username'])
+        server_rtp = self.xml_dicc['rtpaudio']['puerto']
+        proxy_port = self.xml_dicc['regproxy']['puerto']
+        proxy_ip = self.xml_dicc['regproxy']['ip']
+        print("----------")
+        print(proxy_port + " " + username)
 
 
-class ConfigHandler(ContentHandler):
-    # TERMINAR ESTO
-
-    def __init__(self):
-        self.username = ""
-        self.passwd = ""
-        self.servip = ""
-        self.serport = ""
-        self.clport = ""
-        self.prip = ""
-        self.prport = ""
-        self.logpath = ""
-        self.audiopath = ""
-
-    def startElement(self, name, attrs):
-        if name == 'account':
-            self.username = attrs.get('username', "")
-            self.passwd = attrs.get('passwd', "")
-            print(self.username)
-            print(self.passwd)
+cliente = UAClient()
+prueba = cliente.building_sip()
 
 if len(sys.argv) != 3:
     sys.exit("Usage: client.py metodo receptor@IPreceptor:puertoSIP")
@@ -46,11 +50,11 @@ try:
 except (IndexError, ValueError, NameError):
     sys.exit("Usage: python3 client.py method receiver@IP:SIPport")
 
-
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect((IP, port))
+
 
     message = method + " sip:" + receiver + "@" + IP + " SIP/2.0"
     print("Enviando: " + message)

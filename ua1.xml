@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <account username="leonard@bigbang.org" passwd="penny">
-    </account>
-    <uaserver ip="localhost" puerto="55555"></uaserver>
-    <rtpaudio puerto="23032"> </rtpaudio>
-    <regproxy ip="localhost" puerto="44444"></regproxy>
-    <log path="/home/alumnos/fabadq/ptavi-pfinal/log.txt">
-    <audio path="/home/alumnos/fabadq/ptavi-pfinal/cancion.mp3">
-    </audio>
+    <account username="leonard@bigbang.org" passwd="penny"/>
+    <uaserver ip="localhost" puerto="55555"/>
+    <rtpaudio puerto="23032"/>
+    <regproxy ip="localhost" puerto="44444"/>
+    <log path="/home/alumnos/fabadq/ptavi-pfinal/log.txt"/>
+    <audio path="/home/alumnos/fabadq/ptavi-pfinal/cancion.mp3"/>
+</config>
