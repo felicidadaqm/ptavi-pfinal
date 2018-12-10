@@ -12,6 +12,7 @@ import xml.etree.ElementTree as ET
 
 class UAClient:
     xml_dicc = {}
+    message = ''
 
     def config(self):
     # SACO LA CONFIGURACIÓN DE XML
@@ -27,36 +28,53 @@ class UAClient:
         self.config()
 
         username = str(self.xml_dicc['account']['username'])
-        server_rtp = self.xml_dicc['rtpaudio']['puerto']
+        rtp_port = self.xml_dicc['rtpaudio']['puerto']
         proxy_port = self.xml_dicc['regproxy']['puerto']
         proxy_ip = self.xml_dicc['regproxy']['ip']
+        server_ip = self.xml_dicc['uaserver']['ip']
+        server_port = self.xml_dicc['uaserver']['puerto']
         print("----------")
         print(proxy_port + " " + username)
-
+     
+        if sys.argv[3] == 'REGISTER':
+            expires = sys.argv[4]
+            message = 'REGISTER sip:' + username + ':' + server_port + ' SIP/2.0\r\n'
+            message += 'Expires: ' + expires
+        print(self.message)
+        return self.message
 
 cliente = UAClient()
+dicc = cliente.config()
 prueba = cliente.building_sip()
+print(prueba)
 
-if len(sys.argv) != 3:
-    sys.exit("Usage: client.py metodo receptor@IPreceptor:puertoSIP")
+proxy_ip = dicc['regproxy']['ip']
+proxy_port = int(dicc['regproxy']['puerto'])
 
+if len(sys.argv) != 4:
+    sys.exit("Usage: python uaclient.py config metodo opcion")
 
-# CAMBIAR ESTO, DATOS EN XML
+method = sys.argv[2]
+print(method)
+
+#FALTA CAPTURAR ERROR DE NO PUERTO CONECTADO
 try:
-    method = sys.argv[1]
-    receiver = sys.argv[2][0:sys.argv[2].find('@')]
-    IP = sys.argv[2][sys.argv[2].find('@')+1:sys.argv[2].find(':')]
-    port = int(sys.argv[2][sys.argv[2].rfind(':')+1::])
+    if method == 'REGISTER':
+        expires = sys.argv[3]
+        print(expires)
+    elif method =='INVITE':
+        invited = sys.argv[3]
+    else:
+        sys.exit("Método inválido")
 except (IndexError, ValueError, NameError):
-    sys.exit("Usage: python3 client.py method receiver@IP:SIPport")
+    sys.exit("Usage: python uaclient.py config metodo opcion")
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    my_socket.connect((IP, port))
+    my_socket.connect((proxy_ip, proxy_port))
 
-
-    message = method + " sip:" + receiver + "@" + IP + " SIP/2.0"
+    message = 'ay'
     print("Enviando: " + message)
     my_socket.send(bytes(message, 'utf-8') + b'\r\n')
     data = my_socket.recv(1024)
@@ -83,8 +101,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         file.write(EVENT)
         print(EVENT)
         if message != '\r\n':
-            EVENT = date + " Sent to " + str(IP) + ":" + str(port) + ": " + method
-            EVENT += " sip:" + receiver
+            EVENT = date + " Sent to " + "CAMBIAR" + ":" + "CAMBIAR" + ": " + method
+            EVENT += " sip:" + "CAMBIAR"
             file.write(EVENT)
             print(EVENT)
         # TERMINAR BUCLE
