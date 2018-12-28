@@ -3,7 +3,7 @@
     <account username="leonard@bigbang.org" passwd="penny"/>
     <uaserver ip="localhost" puerto="44444"/>
     <rtpaudio puerto="23032"/>
-    <regproxy ip="localhost" puerto="55555"/>
+    <regproxy ip="localhost" puerto="55556"/>
     <log path="/home/alumnos/fabadq/ptavi-pfinal/log.txt"/>
     <audio path="/home/alumnos/fabadq/ptavi-pfinal/cancion.mp3"/>
 </config>
