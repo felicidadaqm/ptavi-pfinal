@@ -49,6 +49,15 @@ class Proxy:
             file = open(file_rute, 'w')
         file.write(date + " " + event)
 
+    def resend(self, ip='', port='', message=''):
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
+            my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            my_socket.connect((ip, port))
+            my_socket.send(bytes(message, 'utf-8') + b'\r\n')
+            event = ' Sent to ' + ip + ':' + port + ': ' + message
+            self.logfile(event)
+            
+
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     """
@@ -99,18 +108,15 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 self.wfile.write(bytes(response, 'utf-8'))
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response1line
 
-        if request[0] == 'INVITE' or request[0] == 'BYE':
+        if request[0] == 'INVITE' or request[0] == 'BYE' or request[0] == 'ACK':
             # FALTA REENVIAR EL MENSAJE
             IP = self.client_address[0]
             port = str(self.client_address[1])
             address = request[1][request[1].find(':')+1:]
             invited_ip = self.client_dicc[address][0]
             invited_port = self.client_dicc[address][1]
-            sent_event = ' Sent to '
+            sent_event = ' Sent to ' + invited_ip + ':' + str(invited_port) + ': ' + prueba
             print(invited_ip, str(invited_port))
-
-        if request[0] == 'ACK':
-            print("falta")
 
 
         recv_event = ' Received from ' + IP + ':' + port + ': ' + prueba1
