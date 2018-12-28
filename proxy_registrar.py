@@ -46,13 +46,16 @@ class Proxy:
 
     def logfile(self, event=''):
         self.config()
+        format_date = '%Y%m%d%H%M%S'
+        time = datetime.now()
+        date = time.strftime(format_date)
         file_rute = self.xml_dicc['log']['path']
         event = event + '\r\n'
         if os.path.exists(file_rute):
             file = open(file_rute, 'a')
         else:
             file = open(file_rute, 'w')
-        file.write(event)
+        file.write(date + " " + event)
 
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
@@ -62,12 +65,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     def handle(self):
 
         lines = []
-
-        format_date = '%Y%m%d%H%M%S'
-        time = datetime.now()
-        date = time.strftime(format_date)
-
-        self.logfile(date + " Starting...")
+        self.logfile(" Starting...")
 
         for line in self.rfile:
             print("El cliente nos manda " + line.decode('utf-8'))
@@ -80,7 +78,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         prueba = ''.join(lines)
         prueba1 = prueba.replace('\r\n', ' ')
         request = prueba1.split(' ')
-        print(prueba)
+        print(request)
         print('______________________')
 
         if request[0] == 'REGISTER' and request[2] == 'SIP/2.0':
@@ -92,20 +90,21 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             if 'Authorization:' in request:
                 #FALTA COMPROBACIÓN CONTRASEÑA Y GUARDAR EN DICCIONARIO
                 response = "200 OK\r\n"
-                sent_event = date + ' Sent to ' + IP + ':' + str(port) + ': ' + response
+                sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response
                 self.wfile.write(bytes(response, 'utf-8'))
                 passwd = request[7][request[7].find('"')+1:request[7].rfind('"')]
-                self.user = address
-                self.client_port = port
-                self.passwd = self.passwdfile(passwd)
-                print("meh")
+                now = datetime.now()
+                reg_time = now.timestamp()
+                expires = request[4]
+                self.client_dicc[address] = [IP, port, reg_time, expires]
+
             elif not 'Authorization:' in request:
                 nonce = random.randint(0, 999999999999999999999)
                 response = 'SIP/2.0 401 Unathorized\r\n'
                 response += 'WWW Authenticate: Digest nonce="' + str(nonce) + '"' + '\r\n'
                 response1line = response.replace('\r\n', ' ')
                 self.wfile.write(bytes(response, 'utf-8'))
-                sent_event = date + ' Sent to ' + IP + ':' + str(port) + ': ' + response1line
+                sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response1line
 
         if request[0] == 'INVITE' or request[0] == 'BYE' or request[0] == 'ACK':
             # FALTA BUSCAR EN DICCIONARIO PARA REENVIAR EL MENSAJE
@@ -113,13 +112,13 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             port = str(self.client_address[1])
 
 
-        recv_event = date + ' Received from ' + IP + ':' + port + ': ' + prueba1
+        recv_event = ' Received from ' + IP + ':' + port + ': ' + prueba1
         passwdfile = self.xml_dicc['database']['passwdpath']
         registerfile = self.xml_dicc['database']['path']
                   
         self.logfile(recv_event)
         self.logfile(sent_event)
-        self.json2registered(passwdfile)
+        self.json2registered(registerfile)
         print(self.client_dicc)
 
 if __name__ == "__main__":
