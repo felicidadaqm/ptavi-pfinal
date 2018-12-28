@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
     <server name="Servidorrr" ip="localhost" puerto="55556"/>
-    <database path="/home/alumnos/fabadq/ptavi-pfinal/registered.txt" passwdpath="/home/alumnos/fabadq/ptavi-pfinal/passwords.txt"/>
+    <database path="/home/alumnos/fabadq/ptavi-pfinal/registered.json" passwdpath="/home/alumnos/fabadq/ptavi-pfinal/passwords.json"/>
     <log path="/home/alumnos/fabadq/ptavi-pfinal/proxy_log.txt"/>
 </config>
