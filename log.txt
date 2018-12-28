@@ -69,3 +69,9 @@
 20181229000823  Starting...
 20181229000823  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
 20181229000823  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20181229001028  Starting...
+20181229001028  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20181229001028  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20181229001217  Starting...
+20181229001217  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20181229001217  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"

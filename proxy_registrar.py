@@ -23,17 +23,17 @@ class Proxy:
             self.xml_dicc[str(branch.tag)] = branch.attrib
         return self.xml_dicc
 
-    def json2registered(self, file_rute=''):
+    def json2registered(self, file_rute='', dicc=''):
         """
         Checks if there's a json file,
         if not, it creates it
         """
         if os.path.exists(file_rute):
             with open(file_rute, 'w') as json_file:
-                json.dump(self.client_dicc, json_file)
+                json.dump(dicc, json_file)
         else:
             with open(file_rute, 'w') as json_file:
-                json.dump(self.client_dicc, json_file)
+                json.dump(dicc, json_file)
 
     def passwdfile(self, password=''):
         self.config()
@@ -88,7 +88,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
 
             user_data = address + " " + IP + " " + str(port)
             if 'Authorization:' in request:
-                #FALTA COMPROBACIÓN CONTRASEÑA Y GUARDAR EN DICCIONARIO
+                #FALTA COMPROBACIÓN CONTRASEÑA
                 response = "200 OK\r\n"
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response
                 self.wfile.write(bytes(response, 'utf-8'))
@@ -97,6 +97,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 reg_time = now.timestamp()
                 expires = request[4]
                 self.client_dicc[address] = [IP, port, reg_time, expires]
+                self.passwords_dicc[address] = [passwd]
 
             elif not 'Authorization:' in request:
                 nonce = random.randint(0, 999999999999999999999)
@@ -118,7 +119,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                   
         self.logfile(recv_event)
         self.logfile(sent_event)
-        self.json2registered(registerfile)
+        self.json2registered(registerfile, self.client_dicc)
+        self.json2registered(passwdfile, self.passwords_dicc)
         print(self.client_dicc)
 
 if __name__ == "__main__":
