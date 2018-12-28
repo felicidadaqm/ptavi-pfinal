@@ -35,14 +35,6 @@ class Proxy:
             with open(file_rute, 'w') as json_file:
                 json.dump(dicc, json_file)
 
-    def passwdfile(self, password=''):
-        self.config()
-        file_rute = self.xml_dicc['database']['passwdpath']
-        if os.path.exists(file_rute):
-            file = open(file_rute, 'a')
-        else:
-            file = open(file_rute, 'w')
-
 
     def logfile(self, event=''):
         self.config()
@@ -108,15 +100,15 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response1line
 
         if request[0] == 'INVITE' or request[0] == 'BYE':
-            # FALTA BUSCAR EN DICCIONARIO PARA REENVIAR EL MENSAJE
+            # FALTA REENVIAR EL MENSAJE
             IP = self.client_address[0]
             port = str(self.client_address[1])
             address = request[1][request[1].find(':')+1:]
-            print(address)
             invited_ip = self.client_dicc[address][0]
             invited_port = self.client_dicc[address][1]
             sent_event = ' Sent to '
             print(invited_ip, str(invited_port))
+
         if request[0] == 'ACK':
             print("falta")
 
