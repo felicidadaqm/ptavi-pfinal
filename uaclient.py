@@ -72,7 +72,7 @@ class UAClient:
         my_port = self.xml_dicc['uaserver']['puerto']
 
         EVENT = " Starting..." + "\r"
-        self.logfile(EVENT)
+        self.logfile(EVENT) 
         if self.message != '\r\n':
             if method == 'REGISTER':
                 EVENT = " Sent to " + proxy_ip + ":" + proxy_port + ": " + method
@@ -84,7 +84,7 @@ class UAClient:
             elif method == 'BYE':
                 EVENT = " Sent to" + proxy_ip + ":" + proxy_port + ":" + method
         self.logfile(EVENT)
-        # TERMINAR BUCLE CON LO RECIBIDO
+        # ARREGLAR ESTO, REDUCIRLO SI ES POSIBLE
 
 if __name__ == "__main__":
     try:
@@ -105,30 +105,44 @@ if __name__ == "__main__":
     proxy_port = int(dicc['regproxy']['puerto'])
     password = dicc['account']['passwd']
 
-#FALTA CAPTURAR ERROR DE NO PUERTO CONECTADO
-
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         my_socket.connect((proxy_ip, proxy_port))
         print("Enviando: " + sip_message)
         my_socket.send(bytes(sip_message, 'utf-8') + b'\r\n')
-        data = my_socket.recv(1024)
+
+        try:
+            data = my_socket.recv(1024)
+        except ConnectionRefusedError:
+            EVENT = ' Error: No server listening at ' + proxy_ip + ' port ' + str(proxy_port)
+            client.logfile(EVENT)
+            sys.exit('Nada escuchando')
 
         print('Recibido -- ', data.decode('utf-8'))
 
         if data.decode('utf-8') != '':
             received = data.decode('utf-8')
+            log_recv = received.replace('\r\n', ' ')
+            recv_event = " Received from " + proxy_ip + ":" + str(proxy_port) + ":" + log_recv
+            client.logfile(recv_event)
+            print(recv_event)
 
+            # FALTA LA RESPUESTA DEL BYE
             if '401' in received:
                 response = sip_message + '\r\n'
                 response += 'Authorization: Digest response="' + password + '"'
                 logmessg = " Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
-                event = logmessg.replace('\r\n', ' ')
-                client.logfile(event)
+                sent_event = logmessg.replace('\r\n', ' ')
                 my_socket.send(bytes(response, 'utf-8') + b'\r\n')
                 data = my_socket.recv(proxy_port)
                 print(data.decode('utf-8'))
-            
+
+            elif '100' and '180' and '200' in received:
+                response = "ACK sip:" + "A QUIEN SE LO ENVIO" + " SIP/2.0"
+                sent_event = " Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
+                my_socket.send(bytes(response, 'utf-8') + b'\r\n') 
+
+            client.logfile(sent_event)      
 
 print("Fin.")

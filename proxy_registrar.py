@@ -9,6 +9,7 @@ import os
 import xml.etree.ElementTree as ET
 import json
 import random
+import socket
 
 class Proxy:
     client_dicc = {}
@@ -55,7 +56,7 @@ class Proxy:
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             my_socket.connect((ip, port))
             my_socket.send(bytes(message, 'utf-8') + b'\r\n')
-            event = ' Sent to ' + ip + ':' + port + ': ' + message
+            event = ' Sent to ' + ip + ':' + str(port) + ': ' + message
             self.logfile(event)
             
 
@@ -83,7 +84,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         print(request)
         print('______________________')
 
-        if request[0] == 'REGISTER' and request[2] == 'SIP/2.0':
+        if request[0] == 'REGISTER':
             address = request[1][request[1].find(':')+1:request[1].rfind(':')]
             IP = self.client_address[0]
             port = request[1][request[1].rfind(':')+1:]
@@ -100,6 +101,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 expires = request[4]
                 self.client_dicc[address] = [IP, port, reg_time, expires]
                 self.passwords_dicc[address] = [passwd]
+                self.resend('', int('6001'), prueba1)
 
             elif not 'Authorization:' in request:
                 nonce = random.randint(0, 999999999999999999999)
@@ -108,7 +110,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 response1line = response.replace('\r\n', ' ')
                 self.wfile.write(bytes(response, 'utf-8'))
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response1line
-                resend(localhost, 6001, response1line)
+                self.resend('', int('6001'), response1line)
 
         if request[0] == 'INVITE' or request[0] == 'BYE' or request[0] == 'ACK':
             # FALTA REENVIAR EL MENSAJE
@@ -132,7 +134,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         print(self.client_dicc)
 
 if __name__ == "__main__":
-    print("-----------------------------------")
+    print("------------------------------------")
 
     try:
         config = sys.argv[1]

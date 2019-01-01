@@ -8,6 +8,32 @@ import socketserver
 import sys
 import os.path
 import os
+import xml.etree.ElementTree as ET
+
+class UAServer():
+    xml_dicc = {}
+    message = ''
+
+    def config(self):
+    # SACO LA CONFIGURACIÓN DE XML
+        tree = ET.parse(sys.argv[1])
+        root = tree.getroot()
+        for branch in root:
+            self.xml_dicc[str(branch.tag)] = branch.attrib
+        return self.xml_dicc
+
+    def logfile(self, event=''):
+        self.config()
+        file_rute = self.xml_dicc['log']['path']
+        format_date = '%Y%m%d%H%M%S'
+        time = datetime.now()
+        date = time.strftime(format_date)
+        event = event + '\r\n'
+        if os.path.exists(file_rute):
+            file = open(file_rute, 'a')
+        else:
+            file = open(file_rute, 'w')
+        file.write(date + " " + event)
 
 
 class EchoHandler(socketserver.DatagramRequestHandler):
@@ -38,9 +64,9 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             elif request[0] == 'BYE':
                 self.wfile.write(b'SIP/2.0 200 OK')
             elif request[0] == 'ACK':
-                aEjecutar = 'mp32rtp -i 127.0.0.1 -p 23032 < ' + audio
+                aEjecutar = 'mp32rtp -i 127.0.0.1 -p 23032 < ' + 'AQUÍ AUDIO'
                 print("Vamos a ejecutar: " + aEjecutar)
-                os.system(aEjecutar)
+                #os.system(aEjecutar)
             elif request[0] != ('INVITE' and 'BYE' and 'ACK'):
                 self.wfile.write(b'SIP/2.0 405 Method Not Allowed')
                 print("Hemos recibido una petición inválida.")
@@ -51,14 +77,13 @@ if __name__ == "__main__":
     Echo server is created
     """
     try:
-        IP = sys.argv[1]
-        port = int(sys.argv[2])
-        if os.path.exists(sys.argv[3]):
-            audio = sys.argv[3]
-        else:
-            sys.exit("Usage: python3 server.py IP port audio_file")
-    except IndexError:
-        sys.exit("Usage: python3 server.py IP port audio_file")
+        config = sys.argv[1]
+    except (IndexError, ValueError, NameError):
+        sys.exit("Usage: python uaserver.py config")
+
+    server = UAServer()
+    dicc = server.config()
+    port = int(dicc['uaserver']['puerto'])
 
     serv = socketserver.UDPServer(('', port), EchoHandler)
     print("Listening...")
