@@ -110,7 +110,6 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 response1line = response.replace('\r\n', ' ')
                 self.wfile.write(bytes(response, 'utf-8'))
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response1line
-                self.resend('', int('6001'), response1line)
 
         if request[0] == 'INVITE' or request[0] == 'BYE' or request[0] == 'ACK':
             # FALTA REENVIAR EL MENSAJE

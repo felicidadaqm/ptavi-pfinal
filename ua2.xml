@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <account username="penny@girlnextdoor" passwd="hollycraponacracker"/>
+    <account username="penny@girlnextdoor.org" passwd="hollycraponacracker"/>
     <uaserver ip="localhost" puerto="6001"/>
     <rtpaudio puerto="23033"/>
-    <regproxy ip="127.0.0.1" puerto="55556"/>
+    <regproxy ip="localhost" puerto="55556"/>
     <log path="/home/alumnos/fabadq/ptavi-pfinal/log2.txt"/>
     <audio path="/home/alumnos/fabadq/ptavi-pfinal/cancion.mp3"/>
 </config>

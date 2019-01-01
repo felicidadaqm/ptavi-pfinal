@@ -9,6 +9,8 @@ import sys
 import os.path
 import os
 import xml.etree.ElementTree as ET
+import os.path
+import socket
 
 class UAServer():
     xml_dicc = {}
@@ -33,10 +35,10 @@ class UAServer():
             file = open(file_rute, 'a')
         else:
             file = open(file_rute, 'w')
-        file.write(date + " " + event)
+        file.write(date + " " + event)     
 
 
-class EchoHandler(socketserver.DatagramRequestHandler):
+class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
     """
     Echo server class
     """
@@ -48,28 +50,36 @@ class EchoHandler(socketserver.DatagramRequestHandler):
         """
 
         for line in self.rfile:
+            lines = []
             print("El cliente nos manda " + line.decode('utf-8'))
 
             if line.decode('utf-8') == '\r\n' or not line:
                 continue
             else:
-                request = line.decode('utf-8').split(" ")
+                received_message = line.decode('utf-8')
+                lines.append(received_message) 
 
-            if request[2] != 'SIP/2.0\r\n':
-                self.wfile.write(b'SIP/2.0 400 Bad Request')
-            elif request[0] == 'INVITE':
-                RESPONSE = 'SIP/2.0 100 Trying ' + 'SIP/2.0 180 Ringing '
-                RESPONSE += 'SIP/2.0 200 OK'
-                self.wfile.write(bytes(RESPONSE, 'utf-8'))
-            elif request[0] == 'BYE':
-                self.wfile.write(b'SIP/2.0 200 OK')
-            elif request[0] == 'ACK':
-                aEjecutar = 'mp32rtp -i 127.0.0.1 -p 23032 < ' + 'AQUÍ AUDIO'
-                print("Vamos a ejecutar: " + aEjecutar)
-                #os.system(aEjecutar)
-            elif request[0] != ('INVITE' and 'BYE' and 'ACK'):
-                self.wfile.write(b'SIP/2.0 405 Method Not Allowed')
-                print("Hemos recibido una petición inválida.")
+        prueba = ''.join(lines)
+        prueba1 = prueba.replace('\r\n', ' ')
+        request = prueba1.split(' ')
+        print(request)
+        print('______________________')
+
+        if request[2] != 'SIP/2.0\r\n':
+            self.wfile.write(b'SIP/2.0 400 Bad Request')
+        elif request[0] == 'INVITE':
+            RESPONSE = 'SIP/2.0 100 Trying\r\n' + 'SIP/2.0 180 Ringing\r\n'
+            RESPONSE += 'SIP/2.0 200 OK\r\n'
+            self.wfile.write(bytes(RESPONSE, 'utf-8'))
+        elif request[0] == 'BYE':
+            self.wfile.write(b'SIP/2.0 200 OK\r\n')
+        elif request[0] == 'ACK':
+            aEjecutar = 'mp32rtp -i 127.0.0.1 -p 23032 < ' + 'AQUÍ AUDIO'
+            print("Vamos a ejecutar: " + aEjecutar)
+            #os.system(aEjecutar)
+        elif request[0] != ('INVITE' and 'BYE' and 'ACK'):
+            self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n')
+            print("Hemos recibido una petición inválida.")
 
 
 if __name__ == "__main__":
@@ -84,6 +94,17 @@ if __name__ == "__main__":
     server = UAServer()
     dicc = server.config()
     port = int(dicc['uaserver']['puerto'])
+    proxy_ip = dicc['regproxy']['ip']
+    proxy_port = int(dicc['regproxy']['puerto'])
+    username = dicc['account']['username']
+    sip_message = "REGISTER sip:" + username + ':' + str(port) + ' SIP/2.0\r\n'
+    sip_message += 'Expires: ' + '1'
+
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
+        my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        my_socket.connect((proxy_ip, proxy_port))
+        print("Enviando: " + sip_message)
+        my_socket.send(bytes(sip_message, 'utf-8') + b'\r\n')
 
     serv = socketserver.UDPServer(('', port), EchoHandler)
     print("Listening...")
