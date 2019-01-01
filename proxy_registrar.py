@@ -51,14 +51,10 @@ class Proxy:
         file.write(date + " " + event)
 
     def resend(self, ip='', port='', message=''):
-        #APAÑAR, NO REENVIA
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             my_socket.connect((ip, port))
-            my_socket.send(bytes(message, 'utf-8') + b'\r\n')
-            event = ' Sent to ' + ip + ':' + str(port) + ': ' + message
-            self.logfile(event)
-            
+            my_socket.send(bytes(message, 'utf-8') + b'\r\n')         
 
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
@@ -66,9 +62,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     Echo server class
     """
     def handle(self):
-
         lines = []
-        self.logfile(" Starting...")
 
         for line in self.rfile:
             print("El cliente nos manda " + line.decode('utf-8'))
@@ -83,11 +77,16 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         request = prueba1.split(' ')
         print(request)
         print('______________________')
+        print(request[0])
 
         if request[0] == 'REGISTER':
+            print('1')
             address = request[1][request[1].find(':')+1:request[1].rfind(':')]
+            print(address)
             IP = self.client_address[0]
+            print(IP)
             port = request[1][request[1].rfind(':')+1:]
+            print(port)
 
             user_data = address + " " + IP + " " + str(port)
             if 'Authorization:' in request:
@@ -101,13 +100,16 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 expires = request[4]
                 self.client_dicc[address] = [IP, port, reg_time, expires]
                 self.passwords_dicc[address] = [passwd]
-                self.resend('', int('6001'), prueba1)
+                self.resend('', int(port), prueba1)
 
             elif not 'Authorization:' in request:
+                print('2')
                 nonce = random.randint(0, 999999999999999999999)
+                print(str(nonce))
                 response = 'SIP/2.0 401 Unathorized\r\n'
                 response += 'WWW Authenticate: Digest nonce="' + str(nonce) + '"' + '\r\n'
                 response1line = response.replace('\r\n', ' ')
+                print(response1line)
                 self.wfile.write(bytes(response, 'utf-8'))
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response1line
 
@@ -147,6 +149,7 @@ if __name__ == "__main__":
     proxy_port = int(dicc['server']['puerto'])
     proxy_name = dicc['server']['name']
 
+    prox.logfile(" Starting...")
     serv = socketserver.UDPServer((proxy_ip, proxy_port), EchoHandler)
     print("Server " + proxy_name + " listening at port " + str(proxy_port) + " . . .")
     serv.serve_forever()

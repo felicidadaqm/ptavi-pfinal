@@ -11,6 +11,7 @@ import os
 import xml.etree.ElementTree as ET
 import os.path
 import socket
+from datetime import datetime, timedelta
 
 class UAServer():
     xml_dicc = {}
@@ -35,8 +36,34 @@ class UAServer():
             file = open(file_rute, 'a')
         else:
             file = open(file_rute, 'w')
-        file.write(date + " " + event)     
+        file.write(date + " " + event)
 
+    def registerserver(self, adicc=''):
+        self.config()
+        proxy_ip = self.xml_dicc['regproxy']['ip']
+        proxy_port = int(self.xml_dicc['regproxy']['puerto'])
+        username = self.xml_dicc['account']['username']
+        sip_message = "REGISTER sip:" + username + ':' + str(port) + ' SIP/2.0\r\n'
+        sip_message += 'Expires: ' + '1\r\n'
+        message = sip_message + adicc
+
+        self.logfile("Starting. . .")
+
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
+            my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            my_socket.connect((proxy_ip, proxy_port))
+            print("Enviando: " + message)
+            my_socket.send(bytes(message, 'utf-8') + b'\r\n')
+
+            data = my_socket.recv(proxy_port)
+            print(data.decode('utf-8'))
+
+            if '401' in data.decode('utf-8'):
+                password = self.xml_dicc['account']['passwd']
+                response = sip_message + 'Authorization: Digest response="' + password + '"'
+                logmessg = " Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
+                sent_event = logmessg.replace('\r\n', ' ')
+                my_socket.send(bytes(response, 'utf-8') + b'\r\n')
 
 class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
     """
@@ -64,6 +91,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         request = prueba1.split(' ')
         print(request)
         print('______________________')
+        
 
         if request[2] != 'SIP/2.0\r\n':
             self.wfile.write(b'SIP/2.0 400 Bad Request')
@@ -94,18 +122,9 @@ if __name__ == "__main__":
     server = UAServer()
     dicc = server.config()
     port = int(dicc['uaserver']['puerto'])
-    proxy_ip = dicc['regproxy']['ip']
-    proxy_port = int(dicc['regproxy']['puerto'])
-    username = dicc['account']['username']
-    sip_message = "REGISTER sip:" + username + ':' + str(port) + ' SIP/2.0\r\n'
-    sip_message += 'Expires: ' + '1'
 
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-        my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        my_socket.connect((proxy_ip, proxy_port))
-        print("Enviando: " + sip_message)
-        my_socket.send(bytes(sip_message, 'utf-8') + b'\r\n')
-
+    server.logfile()
+    server.registerserver()
     serv = socketserver.UDPServer(('', port), EchoHandler)
     print("Listening...")
     serv.serve_forever()
