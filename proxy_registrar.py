@@ -57,18 +57,17 @@ class Proxy:
 
     def checkpasswd(self, passwd='', user=''):
         self.config()
-        correct_passwd = ''
+        comprobation = ''
         passwd_rute = self.xml_dicc['database']['passwdpath']
         if os.path.exists(passwd_rute):
             with open(passwd_rute) as passwd_file:
                 data = json.load(passwd_file)
                 self.passwords_dicc = data
         if passwd == self.passwords_dicc[user][0]:
-            correct_passwd = 'coincide'
+            comprobation = 'coincide'
         else:
-            correct_passwd = 'no coincide'
-        print(correct_passwd)
-        return correct_passwd
+            comprobation = 'no coincide'
+        return comprobation
 
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
@@ -97,7 +96,6 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             IP = self.client_address[0]
             port = request[1][request[1].rfind(':')+1:]
 
-            user_data = address + " " + IP + " " + str(port)
             if 'Authorization:' in request:
                 response = "200 OK\r\n"
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response
@@ -108,7 +106,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 expires = request[4]
 
                 if self.checkpasswd(passwd, address) == 'coincide':
-                    print("Usuario correcto, añadimos a lista")
+                    print("Usuario correcto, registramos")
                     self.client_dicc[address] = [IP, port, reg_time, expires]
                     self.resend('', int(port), prueba1)
                 else:
@@ -125,14 +123,17 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response1line
 
         if request[0] == 'INVITE' or request[0] == 'BYE' or request[0] == 'ACK':
-            # FALTA REENVIAR EL MENSAJE
             IP = self.client_address[0]
             port = str(self.client_address[1])
             address = request[1][request[1].find(':')+1:]
             invited_ip = self.client_dicc[address][0]
             invited_port = self.client_dicc[address][1]
             sent_event = ' Sent to ' + invited_ip + ':' + str(invited_port) + ': ' + prueba
-            print(invited_ip, str(invited_port))
+            self.resend('', int(invited_port), prueba)
+
+        if 200 in request:
+            print("prueba")
+
 
 
         recv_event = ' Received from ' + IP + ':' + port + ': ' + prueba1

@@ -75,29 +75,32 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         Defined different responses
         to different requests from client
         """
+        lines = []
 
         for line in self.rfile:
-            lines = []
             print("El cliente nos manda " + line.decode('utf-8'))
 
             if line.decode('utf-8') == '\r\n' or not line:
                 continue
             else:
                 received_message = line.decode('utf-8')
-                lines.append(received_message) 
+                lines.append(received_message)
 
         prueba = ''.join(lines)
         prueba1 = prueba.replace('\r\n', ' ')
         request = prueba1.split(' ')
         print(request)
-        print('______________________')
-        
+        print("-----------------------")
+        print(request[0])
 
         if request[2] != 'SIP/2.0\r\n':
             self.wfile.write(b'SIP/2.0 400 Bad Request')
-        elif request[0] == 'INVITE':
+
+        if request[0] == 'INVITE':
+            # RECIBIMOS INVITE BIEN, PERO NO CONTESTO
             RESPONSE = 'SIP/2.0 100 Trying\r\n' + 'SIP/2.0 180 Ringing\r\n'
             RESPONSE += 'SIP/2.0 200 OK\r\n'
+            print(RESPONSE)
             self.wfile.write(bytes(RESPONSE, 'utf-8'))
         elif request[0] == 'BYE':
             self.wfile.write(b'SIP/2.0 200 OK\r\n')
@@ -105,7 +108,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             aEjecutar = 'mp32rtp -i 127.0.0.1 -p 23032 < ' + 'AQUÍ AUDIO'
             print("Vamos a ejecutar: " + aEjecutar)
             #os.system(aEjecutar)
-        elif request[0] != ('INVITE' and 'BYE' and 'ACK'):
+        elif request[0] != ('INVITE' and 'BYE' and 'ACK' and 'REGISTER'):
             self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n')
             print("Hemos recibido una petición inválida.")
 
