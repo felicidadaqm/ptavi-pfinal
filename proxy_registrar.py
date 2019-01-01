@@ -36,7 +36,6 @@ class Proxy:
             with open(file_rute, 'w') as json_file:
                 json.dump(dicc, json_file)
 
-
     def logfile(self, event=''):
         self.config()
         format_date = '%Y%m%d%H%M%S'
@@ -54,7 +53,22 @@ class Proxy:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             my_socket.connect((ip, port))
-            my_socket.send(bytes(message, 'utf-8') + b'\r\n')         
+            my_socket.send(bytes(message, 'utf-8') + b'\r\n')    
+
+    def checkpasswd(self, passwd='', user=''):
+        self.config()
+        correct_passwd = ''
+        passwd_rute = self.xml_dicc['database']['passwdpath']
+        if os.path.exists(passwd_rute):
+            with open(passwd_rute) as passwd_file:
+                data = json.load(passwd_file)
+                self.passwords_dicc = data
+        if passwd == self.passwords_dicc[user][0]:
+            correct_passwd = 'coincide'
+        else:
+            correct_passwd = 'no coincide'
+        print(correct_passwd)
+        return correct_passwd
 
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
@@ -77,20 +91,14 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         request = prueba1.split(' ')
         print(request)
         print('______________________')
-        print(request[0])
 
         if request[0] == 'REGISTER':
-            print('1')
             address = request[1][request[1].find(':')+1:request[1].rfind(':')]
-            print(address)
             IP = self.client_address[0]
-            print(IP)
             port = request[1][request[1].rfind(':')+1:]
-            print(port)
 
             user_data = address + " " + IP + " " + str(port)
             if 'Authorization:' in request:
-                #FALTA COMPROBACIÓN CONTRASEÑA
                 response = "200 OK\r\n"
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response
                 self.wfile.write(bytes(response, 'utf-8'))
@@ -98,14 +106,17 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 now = datetime.now()
                 reg_time = now.timestamp()
                 expires = request[4]
-                self.client_dicc[address] = [IP, port, reg_time, expires]
-                self.passwords_dicc[address] = [passwd]
-                self.resend('', int(port), prueba1)
+
+                if self.checkpasswd(passwd, address) == 'coincide':
+                    print("Usuario correcto, añadimos a lista")
+                    self.client_dicc[address] = [IP, port, reg_time, expires]
+                    self.resend('', int(port), prueba1)
+                else:
+                    print("Contraseña incorrecta, no se puede registrar")
+                    #FALTA VER QUE ERROR SE PONE AQUÍ
 
             elif not 'Authorization:' in request:
-                print('2')
                 nonce = random.randint(0, 999999999999999999999)
-                print(str(nonce))
                 response = 'SIP/2.0 401 Unathorized\r\n'
                 response += 'WWW Authenticate: Digest nonce="' + str(nonce) + '"' + '\r\n'
                 response1line = response.replace('\r\n', ' ')
@@ -131,7 +142,6 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         self.logfile(recv_event)
         self.logfile(sent_event)
         self.json2registered(registerfile, self.client_dicc)
-        self.json2registered(passwdfile, self.passwords_dicc)
         print(self.client_dicc)
 
 if __name__ == "__main__":
