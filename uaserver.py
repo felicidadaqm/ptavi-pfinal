@@ -118,14 +118,12 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         elif request[0] == 'BYE':
             self.wfile.write(b'SIP/2.0 200 OK\r\n')
         elif request[0] == 'ACK':
-            # NECESITO SACAR EL PORT RTP
-            print(self.rtp_info)
             audio_rute = self.xml_dicc['audio']['path']
             ip = self.client_address[0]
             port = self.rtp_info[ip]
             aEjecutar = 'mp32rtp -i ' + ip + '-p ' + port + ' < ' + audio_rute
             print("Vamos a ejecutar: " + aEjecutar)
-            os.system(aEjecutar)
+            #os.system(aEjecutar)
         elif request[0] != ('INVITE' and 'BYE' and 'ACK' and 'REGISTER'):
             self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n')
             print("Hemos recibido una petición inválida.")

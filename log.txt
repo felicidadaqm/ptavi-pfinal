@@ -410,3 +410,70 @@
 20190103205744  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
 20190103205744  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
 20190103205744  Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0
+20190103210907  Starting...
+20190103210907  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
+20190103210907  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190103210907  Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0
+20190103210941  Starting...
+20190103210941  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20190103210941  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="884430077495519785310" 
+20190103210941  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190103210944  Starting...
+20190103210944  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
+20190103210944  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190103210944  Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0
+20190103211035  Starting...
+20190103211035  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20190103211035  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="780674893050510513575" 
+20190103211035  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190103211037  Starting...
+20190103211037  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
+20190103211037  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190103211037  Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0
+20190103211118  Starting...
+20190103211118  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20190103211118  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="736304255368150764229" 
+20190103211118  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190103211120  Starting...
+20190103211120  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
+20190103211120  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190103211120  Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0
+20190103211210  Starting...
+20190103211210  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20190103211210  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="549314738206838520613" 
+20190103211210  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190103211213  Starting...
+20190103211213  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
+20190103211213  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190103211213  Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0
+20190103211305  Starting...
+20190103211305  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20190103211305  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="616290331344174891270" 
+20190103211305  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190103211307  Starting...
+20190103211307  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
+20190103211307  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190103211307  Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0
+20190103211408  Starting...
+20190103211408  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20190103211408  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="60721147036954688609" 
+20190103211408  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190103211410  Starting...
+20190103211410  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
+20190103211410  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190103211410  Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0
+20190103211614  Starting...
+20190103211614  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20190103211614  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="517017354192905384507" 
+20190103211614  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190103211616  Starting...
+20190103211616  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
+20190103211616  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190103211725  Starting...
+20190103211725  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0
+20190103211725  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="894062504567376241715" 
+20190103211725  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190103211727  Starting...
+20190103211727  Sent to localhost:55556:INVITE penny@girlnextdoor.org SIP/2.0
+20190103211727  Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190103211727  Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0

@@ -150,7 +150,14 @@ if __name__ == "__main__":
                 receiver = request[16][request[16].find('=')+1:]
                 response = "ACK sip:" + receiver + " SIP/2.0"
                 sent_event = " Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
-                my_socket.send(bytes(response, 'utf-8') + b'\r\n') 
+                my_socket.send(bytes(response, 'utf-8') + b'\r\n')
+
+                audio_rute = dicc['audio']['path']
+                ip_server = request[17]
+                rtp_servport = request[20]
+                aEjecutar = 'mp32rtp -i ' + ip_server + '-p ' + rtp_servport + ' < ' + audio_rute
+                print("Vamos a ejecutar: " + aEjecutar)
+                #os.system(aEjecutar)
 
             client.logfile(sent_event)      
 
