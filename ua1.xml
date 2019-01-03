@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
     <account username="leonard@bigbang.org" passwd="penny"/>
-    <uaserver ip="localhost" puerto="44444"/>
+    <uaserver ip="127.0.0.1" puerto="44444"/>
     <rtpaudio puerto="23032"/>
     <regproxy ip="localhost" puerto="55556"/>
     <log path="/home/alumnos/fabadq/ptavi-pfinal/log.txt"/>

@@ -53,7 +53,18 @@ class Proxy:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             my_socket.connect((ip, port))
-            my_socket.send(bytes(message, 'utf-8') + b'\r\n')    
+            my_socket.send(bytes(message, 'utf-8') + b'\r\n')   
+            
+            data = my_socket.recv(1024)
+            lines = []
+            if data.decode('utf-8') == '\r\n' and data.decode('utf-8') != '':
+                pass
+            else:
+                received_message = data.decode('utf-8')
+                lines.append(received_message)
+
+            prueba = ''.join(lines)
+            return prueba
 
     def checkpasswd(self, passwd='', user=''):
         self.config()
@@ -108,7 +119,6 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 if self.checkpasswd(passwd, address) == 'coincide':
                     print("Usuario correcto, registramos")
                     self.client_dicc[address] = [IP, port, reg_time, expires]
-                    self.resend('', int(port), prueba1)
                 else:
                     print("Contraseña incorrecta, no se puede registrar")
                     #FALTA VER QUE ERROR SE PONE AQUÍ
@@ -131,10 +141,9 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             sent_event = ' Sent to ' + invited_ip + ':' + str(invited_port) + ': ' + prueba
             self.resend('', int(invited_port), prueba)
 
-        if 200 in request:
-            print("prueba")
-
-
+            backsend = self.resend('', int(invited_port), prueba)
+            if backsend != '':
+                self.wfile.write(bytes(backsend, 'utf-8'))
 
         recv_event = ' Received from ' + IP + ':' + port + ': ' + prueba1
         passwdfile = self.xml_dicc['database']['passwdpath']
@@ -146,7 +155,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         print(self.client_dicc)
 
 if __name__ == "__main__":
-    print("------------------------------------")
+    print("-----------------------------------1")
 
     try:
         config = sys.argv[1]

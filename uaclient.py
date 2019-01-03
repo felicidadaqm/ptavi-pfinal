@@ -121,12 +121,20 @@ if __name__ == "__main__":
 
         print('Recibido -- ', data.decode('utf-8'))
 
+        lines = []
         if data.decode('utf-8') != '':
             received = data.decode('utf-8')
+            lines.append(received)
             log_recv = received.replace('\r\n', ' ')
             recv_event = " Received from " + proxy_ip + ":" + str(proxy_port) + ":" + log_recv
             client.logfile(recv_event)
             print(recv_event)
+
+            prueba = ''.join(lines)
+            prueba1 = prueba.replace('\r\n', ' ')
+            request = prueba1.split(' ')
+            print(request)
+            print('______________________')
 
             # FALTA LA RESPUESTA DEL BYE
             if '401' in received:
@@ -139,7 +147,8 @@ if __name__ == "__main__":
                 print(data.decode('utf-8'))
 
             elif '100' and '180' and '200' in received:
-                response = "ACK sip:" + "A QUIEN SE LO ENVIO" + " SIP/2.0"
+                receiver = request[16][request[16].find('=')+1:]
+                response = "ACK sip:" + receiver + " SIP/2.0"
                 sent_event = " Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
                 my_socket.send(bytes(response, 'utf-8') + b'\r\n') 
 
