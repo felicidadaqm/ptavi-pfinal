@@ -18,7 +18,7 @@ class Proxy:
     
     def config(self):
     # SACO LA CONFIGURACIÓN DE XML
-        tree = ET.parse('pr.xml')
+        tree = ET.parse(sys.argv[1])
         root = tree.getroot()
         for branch in root:
             self.xml_dicc[str(branch.tag)] = branch.attrib
@@ -64,7 +64,6 @@ class Proxy:
                 lines.append(received_message)
 
             prueba = ''.join(lines)
-            print(prueba)
             return prueba
 
     def checkpasswd(self, passwd='', user=''):
@@ -103,9 +102,9 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         print(request)
         print('______________________')
 
+        IP = self.client_address[0]
         if request[0] == 'REGISTER':
             address = request[1][request[1].find(':')+1:request[1].rfind(':')]
-            IP = self.client_address[0]
             port = request[1][request[1].rfind(':')+1:]
 
             if 'Authorization:' in request:
@@ -132,8 +131,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 print(response1line)
                 self.wfile.write(bytes(response, 'utf-8'))
                 sent_event = ' Sent to ' + IP + ':' + str(port) + ': ' + response1line
+
         else:
-            IP = self.client_address[0]
             port = str(self.client_address[1])
             address = request[1][request[1].find(':')+1:]
             invited_ip = self.client_dicc[address][0]
@@ -173,13 +172,6 @@ if __name__ == "__main__":
     serv = socketserver.UDPServer((proxy_ip, proxy_port), EchoHandler)
     print("Server " + proxy_name + " listening at port " + str(proxy_port) + " . . .")
     serv.serve_forever()
-
-
-
-
-
-
-
 
 
 

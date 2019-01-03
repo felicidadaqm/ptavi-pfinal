@@ -1,0 +1,5 @@
+20190103221821  Starting. . .
+20190103221821  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6
+20190103221821  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="318394266936660072607" 
+20190103221821  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190103221821  Received from localhost:55556: 200 OK 

@@ -63,28 +63,14 @@ class UAClient:
         return self.message
 
     def writing_log(self):
-        self.building_sip()
 
-        username = str(self.xml_dicc['account']['username'])
-        rtp_port = self.xml_dicc['rtpaudio']['puerto']
+        self.building_sip()
         proxy_ip = self.xml_dicc['regproxy']['ip']
         proxy_port = self.xml_dicc['regproxy']['puerto']
-        my_port = self.xml_dicc['uaserver']['puerto']
+        event1 = " Sent to " + proxy_ip + ":" + proxy_port + ": " + method + " " + self.message
+        siptolog = event1.replace('\r\n', ' ')
 
-        EVENT = " Starting..." + "\r"
-        self.logfile(EVENT) 
-        if self.message != '\r\n':
-            if method == 'REGISTER':
-                EVENT = " Sent to " + proxy_ip + ":" + proxy_port + ": " + method
-                EVENT += " sip:" + username + ":" + my_port + " SIP/2.0"
-                print(EVENT)
-            elif method == 'INVITE':
-                EVENT = " Sent to " + proxy_ip + ":" + proxy_port + ":" + method
-                EVENT += " " + option + " SIP/2.0"
-            elif method == 'BYE':
-                EVENT = " Sent to" + proxy_ip + ":" + proxy_port + ":" + method
-        self.logfile(EVENT)
-        # ARREGLAR ESTO, REDUCIRLO SI ES POSIBLE
+        self.logfile(siptolog)
 
 if __name__ == "__main__":
     try:
@@ -98,12 +84,16 @@ if __name__ == "__main__":
 
     client = UAClient()
     dicc = client.config()
+    client.logfile(' Starting. . .')
     log = client.writing_log()
     sip_message = client.building_sip()
+    print(sip_message)
 
     proxy_ip = dicc['regproxy']['ip']
     proxy_port = int(dicc['regproxy']['puerto'])
     password = dicc['account']['passwd']
+
+
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
@@ -125,26 +115,29 @@ if __name__ == "__main__":
         if data.decode('utf-8') != '':
             received = data.decode('utf-8')
             lines.append(received)
-            log_recv = received.replace('\r\n', ' ')
+
+            recv = ''.join(lines)
+            log_recv = recv.replace('\r\n', ' ')
             recv_event = " Received from " + proxy_ip + ":" + str(proxy_port) + ":" + log_recv
             client.logfile(recv_event)
-            print(recv_event)
 
-            prueba = ''.join(lines)
-            prueba1 = prueba.replace('\r\n', ' ')
-            request = prueba1.split(' ')
-            print(request)
+            request = log_recv.split(' ')
             print('______________________')
 
             # FALTA LA RESPUESTA DEL BYE
             if '401' in received:
                 response = sip_message + '\r\n'
                 response += 'Authorization: Digest response="' + password + '"'
-                logmessg = " Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
-                sent_event = logmessg.replace('\r\n', ' ')
+
                 my_socket.send(bytes(response, 'utf-8') + b'\r\n')
                 data = my_socket.recv(proxy_port)
                 print(data.decode('utf-8'))
+                recv = data.decode('utf-8')
+
+                logmessg_r = " Received from " + proxy_ip + ":" + str(proxy_port) + ": " + recv
+                logmessg_s = " Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
+                sent_event = logmessg_s.replace('\r\n', ' ')
+                recv_event = logmessg_r.replace('\r\n', ' ')
 
             elif '100' and '180' and '200' in received:
                 receiver = request[16][request[16].find('=')+1:]
@@ -159,6 +152,7 @@ if __name__ == "__main__":
                 print("Vamos a ejecutar: " + aEjecutar)
                 #os.system(aEjecutar)
 
-            client.logfile(sent_event)      
+            client.logfile(sent_event)
+            client.logfile(recv_event)     
 
 print("Fin.")
