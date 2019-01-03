@@ -51,7 +51,7 @@ class UAClient:
             self.message = method + ' sip:' + username + ':' + my_port + ' SIP/2.0\r\n'
             self.message += 'Expires: ' + option
         elif method == 'INVITE':
-            self.message = method + ' sip:' + option + ' SIP/2.0\r\n'
+            self.message = method + ' sip:' + option + ' SIP/2\r\n'
             self.message += 'Content-Type: application/sdp\r\n' + '\r\n'
             self.message += 'v=0\r\n' + 'o=' + username + ' ' + my_ip + '\r\n'
             self.message += 's=misesion\r\n' + 't=0\r\n' + 'm=audio ' + rtp_port + ' RTP\r\n'

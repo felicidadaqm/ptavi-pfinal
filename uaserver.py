@@ -100,10 +100,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         print("-----------------------")
         print(request[0]) 
 
-        #if request[2] != 'SIP/2.0\r\n':
-            #self.wfile.write(b'SIP/2.0 400 Bad Request')
-
-        if request[0] == 'INVITE':
+        if request[0] == 'INVITE' and request[2] == 'SIP/2.0':
             print('----------------')
             invited = request[6][request[6].find('=')+1:] 
             SDP = "SIP/2.0 200 OK\r\n" + 'INVITE sip:' + invited + ' SIP/2.0\r\n'
@@ -127,6 +124,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         elif request[0] != ('INVITE' and 'BYE' and 'ACK' and 'REGISTER'):
             self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n')
             print("Hemos recibido una petición inválida.")
+        elif request[2] != 'SIP/2.0':
+            self.wfile.write(b'SIP/2.0 400 Bad Request\r\n')
 
 
 if __name__ == "__main__":
