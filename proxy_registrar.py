@@ -116,7 +116,10 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 reg_time = now.timestamp()
                 expires = request[4]
 
-                if self.checkpasswd(passwd, address) == 'coincide':
+                if expires == '0' and self.checkpasswd(passwd, address) == 'coincide':
+                    print("\n" + "Recibida petición de borrado")
+                    del self.client_dicc[address]
+                elif self.checkpasswd(passwd, address) == 'coincide':
                     print("Usuario correcto, registramos")
                     self.client_dicc[address] = [IP, port, reg_time, expires]
                 else:
