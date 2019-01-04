@@ -1,45 +1,19 @@
-20190103221821  Starting. . .
-20190103221821  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6
-20190103221821  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="318394266936660072607" 
-20190103221821  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
-20190103221821  Received from localhost:55556: 200 OK 
-20190104185906  Starting. . .
-20190104185906  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6
-20190104185906  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="882277572122393195727" 
-20190104185906  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
-20190104185906  Received from localhost:55556: 200 OK 
-20190104185910  Starting. . .
-20190104185910  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 0
-20190104185910  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="954188084942489113797" 
-20190104185910  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 0 Authorization: Digest response="penny"
-20190104185910  Received from localhost:55556: 200 OK 
-20190104185951  Starting. . .
-20190104185951  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6
-20190104185951  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="262987835593578061640" 
-20190104185951  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
-20190104185951  Received from localhost:55556: 200 OK 
-20190104185959  Starting. . .
-20190104185959  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 0
-20190104185959  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="171746627404045830645" 
-20190104185959  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 0 Authorization: Digest response="penny"
-20190104185959  Received from localhost:55556: 200 OK 
-20190104190144  Starting. . .
-20190104190144  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6
-20190104190145  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="799316860020933308375" 
-20190104190145  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
-20190104190145  Received from localhost:55556: 200 OK 
-20190104190147  Starting. . .
-20190104190147  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 0
-20190104190147  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="848057569564272503865" 
-20190104190147  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 0 Authorization: Digest response="penny"
-20190104190147  Received from localhost:55556: 200 OK 
-20190104190215  Starting. . .
-20190104190215  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6
-20190104190215  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="810698027610690988889" 
-20190104190215  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
-20190104190215  Received from localhost:55556: 200 OK 
-20190104190218  Starting. . .
-20190104190218  Sent to localhost:55556: REGISTER REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 0
-20190104190218  Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="494397972839095224896" 
-20190104190218  Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 0 Authorization: Digest response="penny"
-20190104190218  Received from localhost:55556: 200 OK 
+20190104223316 Starting...
+20190104223316 Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6
+20190104223316 Received from localhost:55556:SIP/2.0 401 Unathorized WWW Authenticate: Digest nonce="117363970933022538892" 
+20190104223316 Sent to localhost:55556: REGISTER sip:leonard@bigbang.org:44444 SIP/2.0 Expires: 6 Authorization: Digest response="penny"
+20190104223316 Received from localhost:55556: SIP/2.0 200 OK 
+20190104223316 Finishing...
+20190104223318 Starting...
+20190104223318 Sent to localhost:55556: INVITE sip:penny@girlnextdoor.org SIP/2.0 Content-Type: application/sdp  v=0 o=leonard@bigbang.org 127.0.0.1 s=misesion t=0 m=audio 23032 RTP 
+20190104223318 Received from localhost:55556:SIP/2.0 100 Trying SIP/2.0 180 Ringing SIP/2.0 200 OK INVITE sip:leonard@bigbang.org SIP/2.0 Content-Type: application/sdp  v=0 o=penny@girlnextdoor.org 127.0.0.1 t=0 m=audio 23033
+20190104223318 Sent to localhost:55556: ACK sip:penny@girlnextdoor.org SIP/2.0
+20190104223318 Finishing...
+20190104223328 Starting...
+20190104223328 Sent to localhost:55556: BYE sip:penny@girlnextdoor.org SIP/2.0 
+20190104223328 Received from localhost:55556:SIP/2.0 200 OK 
+20190104223328 Finishing...
+20190104223335 Starting...
+20190104223335 Sent to localhost:55556: MEH sip:penny@girlnextdoor.org SIP/2.0 
+20190104223335 Received from localhost:55556:SIP/2.0 405 Method Not Allowed 
+20190104223335 Finishing...

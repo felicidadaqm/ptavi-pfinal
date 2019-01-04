@@ -38,6 +38,18 @@ class UAServer():
             file = open(file_rute, 'w')
         file.write(date + " " + event)
 
+    def sendtoproxy(self, ip='', port='', message=''):
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
+            my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            my_socket.connect((ip, port))
+            my_socket.send(bytes(message, 'utf-8') + b'\r\n')
+            print("Enviando: " + message)
+
+            data = my_socket.recv(port)
+            recv = data.decode('utf-8')
+            recv1 = recv.replace('\r\n', ' ')
+            return recv1
+
     def registerserver(self, adicc=''):
         self.config()
         proxy_ip = self.xml_dicc['regproxy']['ip']
@@ -47,29 +59,27 @@ class UAServer():
         sip_message += 'Expires: ' + '1\r\n'
         message = sip_message + adicc
 
-        self.logfile("Starting. . .")
+        self.logfile("Starting...")
 
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-            my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            my_socket.connect((proxy_ip, proxy_port))
-            print("Enviando: " + message)
-            my_socket.send(bytes(message, 'utf-8') + b'\r\n')
+        recv = self.sendtoproxy(proxy_ip, proxy_port, message)   
 
-            data = my_socket.recv(proxy_port)
-            print(data.decode('utf-8'))
+        sent_event = "Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + message.replace('\r\n', ' ')
+        recv_event = "Received from " + proxy_ip + ":" + str(proxy_port) + ": " + recv
 
-            if '401' in data.decode('utf-8'):
-                password = self.xml_dicc['account']['passwd']
-                response = sip_message + 'Authorization: Digest response="' + password + '"'
-                logmessg = " Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
-                sent_event = logmessg.replace('\r\n', ' ')
-                my_socket.send(bytes(response, 'utf-8') + b'\r\n')
+        self.logfile(sent_event)
+        self.logfile(recv_event)
 
-    def sendtoproxy(self, ip='', port='', message=''):
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
-            my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            my_socket.connect((ip, port))
-            my_socket.send(bytes(message, 'utf-8') + b'\r\n')  
+        if '401' in recv:
+            password = self.xml_dicc['account']['passwd']
+            response = sip_message + 'Authorization: Digest response="' + password + '"'
+            logmessg = "Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
+            sent_event = logmessg.replace('\r\n', ' ')
+            self.logfile(sent_event)
+            data = self.sendtoproxy(proxy_ip, proxy_port, response)
+
+            recv_event = "Received from " + proxy_ip + ":" + str(proxy_port) + ": " + data
+            self.logfile(recv_event)
+
 
 class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
     """
@@ -83,6 +93,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         to different requests from client
         """
         lines = []
+        proxy_ip = self.xml_dicc['regproxy']['ip']
+        proxy_port = self.xml_dicc['regproxy']['puerto']
 
         for line in self.rfile:
             print("El cliente nos manda " + line.decode('utf-8'))
@@ -98,7 +110,9 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         request = prueba1.split(' ')
         print(request)
         print("-----------------------")
-        print(request[0]) 
+        
+        recv_event = "Received from " + proxy_ip + ":" + proxy_port + ": " + prueba1
+        self.logfile(recv_event)
 
         if request[0] == 'INVITE' and request[2] == 'SIP/2.0':
             print('----------------')
@@ -112,8 +126,13 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             self.wfile.write(b'SIP/2.0 180 Ringing\r\n')
             self.wfile.write(bytes(SDP, 'utf-8'))
             self.rtp_info[request[7]] = request[11]
+
+            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 100 Trying")
+            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 180 Ringing")
+            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": " + SDP.replace('\r\n', ' '))
         elif request[0] == 'BYE':
             self.wfile.write(b'SIP/2.0 200 OK\r\n')
+            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 200 OK")
         elif request[0] == 'ACK':
             audio_rute = self.xml_dicc['audio']['path']
             ip = self.client_address[0]
@@ -123,9 +142,11 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             #os.system(aEjecutar)
         elif request[0] != ('INVITE' and 'BYE' and 'ACK' and 'REGISTER'):
             self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n')
+            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 405 Method Not Allowed")
             print("Hemos recibido una petición inválida.")
         elif request[2] != 'SIP/2.0':
             self.wfile.write(b'SIP/2.0 400 Bad Request\r\n')
+            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 400 Bad Request")
 
 
 if __name__ == "__main__":
@@ -141,7 +162,6 @@ if __name__ == "__main__":
     dicc = server.config()
     port = int(dicc['uaserver']['puerto'])
 
-    server.logfile()
     server.registerserver()
     serv = socketserver.UDPServer(('', port), EchoHandler)
     print("Listening...")
