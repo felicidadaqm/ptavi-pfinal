@@ -81,6 +81,19 @@ class Proxy:
             comprobation = 'no coincide'
         return comprobation
 
+    def timeout(self):
+        """
+        Searchs for expired users
+        """
+        user_list = []      
+        for username in self.client_dicc:
+            expiration = self.client_dicc[username][3]
+            actual_time = datetime.now()
+            actual_secs = actual_time.timestamp()
+            if actual_secs >= expiration:
+                user_list.append(username)
+        for user in user_list:
+            del self.client_dicc[username]
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     """
@@ -117,7 +130,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 passwd = request[7][request[7].find('"')+1:request[7].rfind('"')]
                 now = datetime.now()
                 reg_time = now.timestamp()
-                expires = request[4]
+                expires = float(request[4]) + reg_time
 
                 if expires == '0' and self.checkpasswd(passwd, address) == 'coincide':
                     print("\n" + "Recibida petición de borrado")
@@ -163,6 +176,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
 
         registerfile = self.xml_dicc['database']['path']     
         self.json2registered(registerfile, self.client_dicc)
+        self.timeout()
         print(self.client_dicc)
 
 if __name__ == "__main__":
