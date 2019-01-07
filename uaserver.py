@@ -56,7 +56,7 @@ class UAServer():
         proxy_port = int(self.xml_dicc['regproxy']['puerto'])
         username = self.xml_dicc['account']['username']
         sip_message = "REGISTER sip:" + username + ':' + str(port) + ' SIP/2.0\r\n'
-        sip_message += 'Expires: ' + '1\r\n'
+        sip_message += 'Expires: ' + '30\r\n'
         message = sip_message + adicc
 
         self.logfile("Starting...")

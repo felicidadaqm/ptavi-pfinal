@@ -101,6 +101,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     """
     def handle(self):
         lines = []
+        backsend = ''
 
         for line in self.rfile:
             print("El cliente nos manda " + line.decode('utf-8'))
@@ -158,15 +159,21 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             # ENVIO A LA DIRECCIÓN QUE ESTÁ EN LA INVITACIÓN
             port = str(self.client_address[1])
             address = request[1][request[1].find(':')+1:]
-            invited_ip = self.client_dicc[address][0]
-            invited_port = self.client_dicc[address][1]
-            sent_event = 'Sent to ' + invited_ip + ':' + str(invited_port) + ': ' + prueba1
+            try:
+                invited_ip = self.client_dicc[address][0]
+                invited_port = self.client_dicc[address][1]
+                sent_event = 'Sent to ' + invited_ip + ':' + str(invited_port) + ': ' + prueba1
+                backsend = self.resend('', int(invited_port), prueba)
+            except KeyError:
+                self.wfile.write(b'SIP/2.0 404 User Not Found\r\n')
+                sent_event = 'Sent to ' + IP + ':' + port + ': SIP/2.0 404 User Not Found'
+                print('Enviamos 404 user not found')
+
             recv_event = 'Received from ' + IP + ':' + port + ': ' + prueba1
             self.logfile(recv_event)
             self.logfile(sent_event)
 
             # SI LA RESPUESTA A RESEND TIENE ALGO, LA ENVIO DE VUELTA
-            backsend = self.resend('', int(invited_port), prueba)
             if backsend != '':
                 recv_event = 'Received from ' + IP + ':' + port + ': ' + backsend.replace('\r\n', ' ')
                 sent_event = 'Sent to ' + IP + ':' + port + ': ' + backsend.replace('\r\n', ' ')
@@ -194,11 +201,12 @@ if __name__ == "__main__":
     proxy_port = int(dicc['server']['puerto'])
     proxy_name = dicc['server']['name']
 
-    prox.logfile(" Starting...")
+    prox.logfile("Starting...")
     serv = socketserver.UDPServer((proxy_ip, proxy_port), EchoHandler)
     print("Server " + proxy_name + " listening at port " + str(proxy_port) + " . . .")
-    serv.serve_forever()
 
-
-
-
+    try:
+        serv.serve_forever()
+    except KeyboardInterrupt:
+        prox.logfile("Finishing...")
+        print("Proxy_registrar terminado")
