@@ -165,4 +165,12 @@ if __name__ == "__main__":
     server.registerserver()
     serv = socketserver.UDPServer(('', port), EchoHandler)
     print("Listening...")
-    serv.serve_forever()
+
+    try:
+        serv.serve_forever()
+    except KeyboardInterrupt:
+        server.logfile("Finishing...")
+        print("uaserver terminado")
+
+
+

@@ -29,12 +29,15 @@ class Proxy:
         Checks if there's a json file,
         if not, it creates it
         """
+        with open(file_rute, 'w') as json_file:
+            json.dump(dicc, json_file)
+
+    def restablishusers(self):
+        file_rute = self.xml_dicc['database']['path']
         if os.path.exists(file_rute):
-            with open(file_rute, 'w') as json_file:
-                json.dump(dicc, json_file)
-        else:
-            with open(file_rute, 'w') as json_file:
-                json.dump(dicc, json_file)
+            with open(file_rute) as json_file:
+                users = json.load(json_file)
+                self.client_dicc = users
 
     def logfile(self, event=''):
         self.config()
@@ -92,8 +95,20 @@ class Proxy:
             actual_secs = actual_time.timestamp()
             if actual_secs >= expiration:
                 user_list.append(username)
-        for user in user_list:
-            del self.client_dicc[username]
+        try:
+            for user in user_list:
+                del self.client_dicc[username]
+        except KeyError:
+            print("No se puede borrar, usuario no encontrado")
+
+    def aditionalheader(self, message=''):
+        ip = self.xml_dicc['server']['ip']
+        port = self.xml_dicc['server']['puerto']
+        proxy_header = "Vía: SIP/2.0/UDP " + ip + ":" + port + ";rport;branch=PASAMOSPORPOROXY\r\n"
+        final_messg = message + proxy_header
+        return final_messg
+        
+
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     """
@@ -102,6 +117,9 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     def handle(self):
         lines = []
         backsend = ''
+
+        if not self.client_dicc:
+            self.restablishusers()
 
         for line in self.rfile:
             print("El cliente nos manda " + line.decode('utf-8'))
@@ -115,7 +133,6 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         prueba1 = prueba.replace('\r\n', ' ')
         request = prueba1.split(' ')
         print(request)
-        print('______________________')
 
         IP = self.client_address[0]
 
@@ -159,6 +176,17 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             # ENVIO A LA DIRECCIÓN QUE ESTÁ EN LA INVITACIÓN
             port = str(self.client_address[1])
             address = request[1][request[1].find(':')+1:]
+            print('---------------------- PRUEBAS CABECERA ADICIONAL')
+
+            if request[0] == 'INVITE':
+                aver = self.aditionalheader(lines[0])
+                dos = aver + lines[1] + '\r\n\r\n' + ''.join(lines[2:])
+                print(dos)
+
+            else:
+                aver = self.aditionalheader(prueba)
+                print(aver)
+
             try:
                 invited_ip = self.client_dicc[address][0]
                 invited_port = self.client_dicc[address][1]
@@ -187,7 +215,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         print(self.client_dicc)
 
 if __name__ == "__main__":
-    print("-----------------------------------1")
+    print("-----------------------------------MAIN")
 
     try:
         config = sys.argv[1]
