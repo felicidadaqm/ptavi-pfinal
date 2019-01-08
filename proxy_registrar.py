@@ -67,7 +67,6 @@ class Proxy:
             lines.append(received_message)
 
         prueba = ''.join(lines)
-        print('........................ ' + prueba)
         return prueba
 
     def checkpasswd(self, passwd='', user=''):
@@ -104,10 +103,9 @@ class Proxy:
     def aditionalheader(self, message=''):
         ip = self.xml_dicc['server']['ip']
         port = self.xml_dicc['server']['puerto']
-        proxy_header = "Vía: SIP/2.0/UDP " + ip + ":" + port + ";rport;branch=PASAMOSPORPOROXY\r\n"
+        proxy_header = "Via: SIP/2.0/UDP " + ip + ":" + port + ";rport;branch=PASAMOSPORPOROXY\r\n"
         final_messg = message + proxy_header
         return final_messg
-        
 
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
@@ -117,6 +115,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     def handle(self):
         lines = []
         backsend = ''
+        final_messg = ''
 
         if not self.client_dicc:
             self.restablishusers()
@@ -178,25 +177,20 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             print('---------------------- PRUEBAS CABECERA ADICIONAL')
 
             if request[0] == 'INVITE':
-                aver = self.aditionalheader(lines[0])
-                dos = aver + lines[1] + '\r\n\r\n' + ''.join(lines[2:])
-                print(dos)
+                princip = self.aditionalheader(lines[0])
+                final_messg = princip + lines[1] + '\r\n' + ''.join(lines[2:])
+                print(final_messg)
             else:
-                aver = self.aditionalheader(prueba)
-                print(aver)
+                final_messg = self.aditionalheader(prueba)
+                print(final_messg)
 
-                print('----------------- PRUEBA NUEVO INVITE')
-                print(request)
-                print(address)
             try:
                 invited_ip = self.client_dicc[address][0]
                 invited_port = self.client_dicc[address][1]
                 sent_event = 'Sent to ' + invited_ip + ':' + str(invited_port) + ': ' + prueba1
-                if request[0] == 'INVITE':
-                    sdp = ''.join(lines[:2]) + '\r\n' + ''.join(lines[2:])
-                    prueba = sdp
-                    print('------------------ PRUEBA SDP' + sdp)
-                backsend = self.resend('', int(invited_port), prueba)  
+
+                prueba = final_messg
+                backsend = self.resend('', int(invited_port), prueba) 
             except KeyError:
                 self.wfile.write(b'SIP/2.0 404 User Not Found\r\n')
                 sent_event = 'Sent to ' + IP + ':' + port + ': SIP/2.0 404 User Not Found'

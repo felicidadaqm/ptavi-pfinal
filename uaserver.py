@@ -86,7 +86,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
 
         if request[0] == 'INVITE' and request[2] == 'SIP/2.0':
             print('----------------')
-            invited = request[6][request[6].find('=')+1:] 
+            invited = request[9][request[9].find('=')+1:]
+            print(invited)
             SDP = "SIP/2.0 200 OK\r\n\r\n" + 'INVITE sip:' + invited + ' SIP/2.0\r\n'
             SDP += 'Content-Type: application/sdp\r\n\r\n'
             SDP += 'v=0\r\n' + 'o=' + self.xml_dicc['account']['username']
@@ -95,7 +96,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             self.wfile.write(b'SIP/2.0 100 Trying\r\n\r\n')
             self.wfile.write(b'SIP/2.0 180 Ringing\r\n\r\n')
             self.wfile.write(bytes(SDP, 'utf-8'))
-            self.rtp_info[request[7]] = request[11]
+            self.rtp_info[request[10]] = request[14]
 
             self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 100 Trying")
             self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 180 Ringing")
