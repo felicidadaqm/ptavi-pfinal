@@ -97,7 +97,7 @@ if __name__ == "__main__":
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         my_socket.connect((proxy_ip, proxy_port))
         print("Enviamos:" + sip_message)
-        my_socket.send(bytes(sip_message, 'utf-8') + b'\r\n')
+        my_socket.send(bytes(sip_message, 'utf-8') + b'\r\n\r\n')
 
         try:
             data = my_socket.recv(1024)
@@ -124,7 +124,7 @@ if __name__ == "__main__":
                 response = sip_message + '\r\n'
                 response += 'Authorization: Digest response="' + password + '"'
 
-                my_socket.send(bytes(response, 'utf-8') + b'\r\n')
+                my_socket.send(bytes(response, 'utf-8') + b'\r\n\r\n')
                 data = my_socket.recv(proxy_port)
                 print(data.decode('utf-8'))
                 recv = data.decode('utf-8')
@@ -138,18 +138,22 @@ if __name__ == "__main__":
 
 
             elif '100' and '180' in received:
-                receiver = request[16][request[16].find('=')+1:]
+                receiver = request[19][request[19].find('=')+1:]
+                print('--------------- PRUEBA CABECERAS')
+                print(request)
+                print(receiver)
                 response = "ACK sip:" + receiver + " SIP/2.0"
                 sent_event = "Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
                 client.logfile(sent_event)
-                my_socket.send(bytes(response, 'utf-8') + b'\r\n')
+                my_socket.send(bytes(response, 'utf-8') + b'\r\n\r\n')
 
                 audio_rute = dicc['audio']['path']
-                ip_server = request[17]
-                rtp_servport = request[20]
-                aEjecutar = 'mp32rtp -i ' + ip_server + '-p ' + rtp_servport + ' < ' + audio_rute
+                ip_server = request[20]
+                rtp_servport = request[23]
+                print(rtp_servport)
+                aEjecutar = 'mp32rtp -i ' + ip_server + ' -p ' + rtp_servport + ' < ' + audio_rute
                 print("Vamos a ejecutar: " + aEjecutar)
-                #os.system(aEjecutar)
+                os.system(aEjecutar)
 
     client.logfile('Finishing...') 
 

@@ -24,7 +24,7 @@ class Proxy:
             self.xml_dicc[str(branch.tag)] = branch.attrib
         return self.xml_dicc
 
-    def json2registered(self, file_rute='', dicc=''):
+    def json2registered(self, file_rute='', dicc={}):
         """
         Checks if there's a json file,
         if not, it creates it
@@ -132,7 +132,6 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         prueba = ''.join(lines)
         prueba1 = prueba.replace('\r\n', ' ')
         request = prueba1.split(' ')
-        print(request)
 
         IP = self.client_address[0]
 
@@ -162,8 +161,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
 
             elif not 'Authorization:' in request:
                 nonce = random.randint(0, 999999999999999999999)
-                response = 'SIP/2.0 401 Unathorized\r\n'
-                response += 'WWW Authenticate: Digest nonce="' + str(nonce) + '"' + '\r\n'
+                response = 'SIP/2.0 401 Unathorized\r\n\r\n'
+                response += 'WWW Authenticate: Digest nonce="' + str(nonce) + '"' + '\r\n\r\n'
                 response1line = response.replace('\r\n', ' ')
                 print(response1line)
                 self.wfile.write(bytes(response, 'utf-8'))
@@ -182,16 +181,22 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 aver = self.aditionalheader(lines[0])
                 dos = aver + lines[1] + '\r\n\r\n' + ''.join(lines[2:])
                 print(dos)
-
             else:
                 aver = self.aditionalheader(prueba)
                 print(aver)
 
+                print('----------------- PRUEBA NUEVO INVITE')
+                print(request)
+                print(address)
             try:
                 invited_ip = self.client_dicc[address][0]
                 invited_port = self.client_dicc[address][1]
                 sent_event = 'Sent to ' + invited_ip + ':' + str(invited_port) + ': ' + prueba1
-                backsend = self.resend('', int(invited_port), prueba)
+                if request[0] == 'INVITE':
+                    sdp = ''.join(lines[:2]) + '\r\n' + ''.join(lines[2:])
+                    prueba = sdp
+                    print('------------------ PRUEBA SDP' + sdp)
+                backsend = self.resend('', int(invited_port), prueba)  
             except KeyError:
                 self.wfile.write(b'SIP/2.0 404 User Not Found\r\n')
                 sent_event = 'Sent to ' + IP + ':' + port + ': SIP/2.0 404 User Not Found'
