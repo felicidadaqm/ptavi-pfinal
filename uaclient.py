@@ -36,6 +36,14 @@ class UAClient:
             file = open(file_rute, 'w')
         file.write(date + " " + event)
 
+    def wlogsent(self, ip='', port='', extra=''):
+        sent_event = "Sent to " + ip + ":" + port + ": " + extra
+        self.logfile(sent_event)
+
+    def wlogrecv(self, ip='', port='', extra=''):
+        recv_event = "Received from " + ip + ":" + port + ": " + extra
+        self.logfile(recv_event)
+
     def building_sip(self):
         self.config()
 
@@ -62,15 +70,6 @@ class UAClient:
             print("Petición inválida")
         return self.message
 
-    def writing_log(self):
-
-        self.building_sip()
-        proxy_ip = self.xml_dicc['regproxy']['ip']
-        proxy_port = self.xml_dicc['regproxy']['puerto']
-        event1 = "Sent to " + proxy_ip + ":" + proxy_port + ": " + self.message
-        siptolog = event1.replace('\r\n', ' ')
-
-        self.logfile(siptolog)
 
 if __name__ == "__main__":
     try:
@@ -85,24 +84,26 @@ if __name__ == "__main__":
     client = UAClient()
     dicc = client.config()
     client.logfile('Starting...')
-    log = client.writing_log()
     sip_message = client.building_sip()
 
     proxy_ip = dicc['regproxy']['ip']
-    proxy_port = int(dicc['regproxy']['puerto'])
+    proxy_port = dicc['regproxy']['puerto']
     password = dicc['account']['passwd']
+    myrtp_port = dicc['rtpaudio']['puerto']
+    my_ip = dicc['uaserver']['ip']
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        my_socket.connect((proxy_ip, proxy_port))
+        my_socket.connect((proxy_ip, int(proxy_port)))
         print("Enviamos:" + sip_message)
         my_socket.send(bytes(sip_message, 'utf-8') + b'\r\n\r\n')
+        client.wlogsent(proxy_ip, proxy_port, sip_message.replace('\r\n', ' '))
 
         try:
             data = my_socket.recv(1024)
         except ConnectionRefusedError:
-            EVENT = 'Error: No server listening at ' + proxy_ip + ' port ' + str(proxy_port)
+            EVENT = 'Error: No server listening at ' + proxy_ip + ' port ' + proxy_port
             client.logfile(EVENT)
             sys.exit('Nada escuchando')
 
@@ -115,8 +116,7 @@ if __name__ == "__main__":
 
             recv = ''.join(lines)
             log_recv = recv.replace('\r\n', ' ')
-            recv_event = "Received from " + proxy_ip + ":" + str(proxy_port) + ":" + log_recv
-            client.logfile(recv_event)
+            client.wlogrecv(proxy_ip, proxy_port, log_recv)
 
             request = log_recv.split(' ')
 
@@ -125,35 +125,33 @@ if __name__ == "__main__":
                 response += 'Authorization: Digest response="' + password + '"'
 
                 my_socket.send(bytes(response, 'utf-8') + b'\r\n\r\n')
-                data = my_socket.recv(proxy_port)
+                data = my_socket.recv(int(proxy_port))
                 print(data.decode('utf-8'))
                 recv = data.decode('utf-8')
 
-                logmessg_r = "Received from " + proxy_ip + ":" + str(proxy_port) + ": " + recv
-                logmessg_s = "Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
-                sent_event = logmessg_s.replace('\r\n', ' ')
-                recv_event = logmessg_r.replace('\r\n', ' ')
-                client.logfile(sent_event)
-                client.logfile(recv_event)
+                client.wlogsent(proxy_ip, proxy_port, response.replace('\r\n', ' '))
+                client.wlogrecv(proxy_ip, proxy_port, recv.replace('\r\n', ' '))
 
 
             elif '100' and '180' in received:
-                receiver = request[19][request[19].find('=')+1:]
+                receiver = request[20][request[20].find('=')+1:]
                 print('--------------- PRUEBA CABECERAS')
                 print(request)
                 print(receiver)
                 response = "ACK sip:" + receiver + " SIP/2.0"
-                sent_event = "Sent to " + proxy_ip + ":" + str(proxy_port) + ": " + response
-                client.logfile(sent_event)
+                client.wlogsent(proxy_ip, proxy_port, response)
                 my_socket.send(bytes(response, 'utf-8') + b'\r\n\r\n')
 
                 audio_rute = dicc['audio']['path']
-                ip_server = request[20]
-                rtp_servport = request[23]
+                ip_server = request[21]
+                rtp_servport = request[24]
                 print(rtp_servport)
                 aEjecutar = 'mp32rtp -i ' + ip_server + ' -p ' + rtp_servport + ' < ' + audio_rute
                 print("Vamos a ejecutar: " + aEjecutar)
                 os.system(aEjecutar)
+
+                escuchar = 'cvlc rtp://@' + my_ip + ':' + myrtp_port
+                os.system(escuchar)
 
     client.logfile('Finishing...') 
 

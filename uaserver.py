@@ -38,6 +38,14 @@ class UAServer():
             file = open(file_rute, 'w')
         file.write(date + " " + event)
 
+    def wlogsent(self, ip='', port='', extra=''):
+        sent_event = "Sent to " + ip + ":" + port + ": " + extra
+        self.logfile(sent_event)
+
+    def wlogrecv(self, ip='', port='', extra=''):
+        recv_event = "Received from " + ip + ":" + port + ": " + extra
+        self.logfile(recv_event)
+
     def sendtoproxy(self, ip='', port='', message=''):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
             my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -82,7 +90,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         print("-----------------------")
         
         recv_event = "Received from " + proxy_ip + ":" + proxy_port + ": " + prueba1
-        self.logfile(recv_event)
+        self.wlogrecv(proxy_ip, proxy_port, prueba1)
 
         if request[0] == 'INVITE' and request[2] == 'SIP/2.0':
             print('----------------')
@@ -98,12 +106,14 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             self.wfile.write(bytes(SDP, 'utf-8'))
             self.rtp_info[request[10]] = request[14]
 
-            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 100 Trying")
-            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 180 Ringing")
-            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": " + SDP.replace('\r\n', ' '))
+            self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 100 Trying")
+            self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 180 Ringing")
+            self.wlogsent(proxy_ip, proxy_port, SDP.replace('\r\n', ' '))
+
         elif request[0] == 'BYE':
             self.wfile.write(b'SIP/2.0 200 OK\r\n\r\n')
-            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 200 OK")
+            self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 200 OK")
+
         elif request[0] == 'ACK':
             audio_rute = self.xml_dicc['audio']['path']
             ip = self.client_address[0]
@@ -114,11 +124,11 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             os.system(aEjecutar)
         elif request[0] != ('INVITE' and 'BYE' and 'ACK' and 'REGISTER'):
             self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n\r\n')
-            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 405 Method Not Allowed")
+            self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 405 Method Not Allowed")
             print("Hemos recibido una petición inválida.")
         elif request[2] != 'SIP/2.0':
             self.wfile.write(b'SIP/2.0 400 Bad Request\r\n\r\n')
-            self.logfile("Sent to " + proxy_ip + ":" + proxy_port + ": SIP/2.0 400 Bad Request")
+            self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 400 Bad Request")
 
 
 if __name__ == "__main__":
@@ -133,6 +143,7 @@ if __name__ == "__main__":
     server = UAServer()
     dicc = server.config()
     port = int(dicc['uaserver']['puerto'])
+    server.logfile("Starting...")
 
     serv = socketserver.UDPServer(('', port), EchoHandler)
     print("Listening...")

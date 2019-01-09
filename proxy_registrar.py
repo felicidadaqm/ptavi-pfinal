@@ -52,6 +52,14 @@ class Proxy:
             file = open(file_rute, 'w')
         file.write(date + " " + event)
 
+    def wlogsent(self, ip='', port='', extra=''):
+        sent_event = "Sent to " + ip + ":" + port + ": " + extra
+        self.logfile(sent_event)
+
+    def wlogrecv(self, ip='', port='', extra=''):
+        recv_event = "Received from " + ip + ":" + port + ": " + extra
+        self.logfile(recv_event)
+
     def resend(self, ip='', port='', message=''):
         my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -100,10 +108,10 @@ class Proxy:
         except KeyError:
             print("No se puede borrar, usuario no encontrado")
 
-    def aditionalheader(self, message=''):
+    def aditionalheader(self, message='', eol=''):
         ip = self.xml_dicc['server']['ip']
         port = self.xml_dicc['server']['puerto']
-        proxy_header = "Via: SIP/2.0/UDP " + ip + ":" + port + ";rport;branch=PASAMOSPORPOROXY\r\n"
+        proxy_header = eol + "Via: SIP/2.0/UDP " + ip + ":" + port + ";rport;branch=PASAMOSPORPOROXY\r\n"
         final_messg = message + proxy_header
         return final_messg
 
@@ -112,6 +120,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     """
     Echo server class
     """
+    client_info = {}
+
     def handle(self):
         lines = []
         backsend = ''
@@ -133,15 +143,15 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
         request = prueba1.split(' ')
 
         IP = self.client_address[0]
+        recv_port = str(self.client_address[1])
 
         if request[0] == 'REGISTER':
             address = request[1][request[1].find(':')+1:request[1].rfind(':')]
             port = request[1][request[1].rfind(':')+1:]
-            recv_event = 'Received from ' + IP + ':' + port + ': ' + prueba1
+            self.client_info[IP] = port
 
             if 'Authorization:' in request:
                 response = "SIP/2.0 200 OK\r\n"
-                sent_event = 'Sent to ' + IP + ':' + str(port) + ': SIP/2.0 200 OK'
                 self.wfile.write(bytes(response, 'utf-8'))
                 passwd = request[7][request[7].find('"')+1:request[7].rfind('"')]
                 now = datetime.now()
@@ -162,13 +172,11 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 nonce = random.randint(0, 999999999999999999999)
                 response = 'SIP/2.0 401 Unathorized\r\n\r\n'
                 response += 'WWW Authenticate: Digest nonce="' + str(nonce) + '"' + '\r\n\r\n'
-                response1line = response.replace('\r\n', ' ')
-                print(response1line)
                 self.wfile.write(bytes(response, 'utf-8'))
-                sent_event = 'Sent to ' + IP + ':' + str(port) + ': ' + response1line
 
-            self.logfile(recv_event)
-            self.logfile(sent_event)
+            self.wlogrecv(IP, recv_port, prueba1)
+            self.wlogsent(IP, port, response.replace('\r\n', ' '))
+
 
         else:
             # ENVIO A LA DIRECCIÓN QUE ESTÁ EN LA INVITACIÓN
@@ -177,36 +185,37 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             print('---------------------- PRUEBAS CABECERA ADICIONAL')
 
             if request[0] == 'INVITE':
-                princip = self.aditionalheader(lines[0])
+                princip = self.aditionalheader(lines[0], '')
                 final_messg = princip + lines[1] + '\r\n' + ''.join(lines[2:])
-                print(final_messg)
             else:
                 final_messg = self.aditionalheader(prueba)
-                print(final_messg)
+            print(final_messg)
 
             try:
                 invited_ip = self.client_dicc[address][0]
                 invited_port = self.client_dicc[address][1]
-                sent_event = 'Sent to ' + invited_ip + ':' + str(invited_port) + ': ' + prueba1
 
                 prueba = final_messg
                 backsend = self.resend('', int(invited_port), prueba) 
             except KeyError:
                 self.wfile.write(b'SIP/2.0 404 User Not Found\r\n')
-                sent_event = 'Sent to ' + IP + ':' + port + ': SIP/2.0 404 User Not Found'
+                self.wlogsent(IP, port, "SIP/2.0 404 User Not Found")
                 print('Enviamos 404 user not found')
 
-            recv_event = 'Received from ' + IP + ':' + port + ': ' + prueba1
-            self.logfile(recv_event)
-            self.logfile(sent_event)
+            self.wlogrecv(IP, port, prueba1)
+            self.wlogsent(invited_ip, str(invited_port), prueba1)
 
             # SI LA RESPUESTA A RESEND TIENE ALGO, LA ENVIO DE VUELTA
             if backsend != '':
-                recv_event = 'Received from ' + IP + ':' + port + ': ' + backsend.replace('\r\n', ' ')
-                sent_event = 'Sent to ' + IP + ':' + port + ': ' + backsend.replace('\r\n', ' ')
-                self.logfile(recv_event)
-                self.logfile(sent_event)
-                self.wfile.write(bytes(backsend, 'utf-8'))
+                if '200' in backsend:
+                    spliting_mssg = backsend.split('\r\n')
+                    final_mssg = self.aditionalheader('\r\n'.join(spliting_mssg[:7]), '\r\n') 
+                    final_mssg += '\r\n'.join(spliting_mssg[8:])
+                    print('-----------------------PRUEBA 100')
+                    print(final_mssg)
+                self.wlogrecv(IP, port, backsend.replace('\r\n', ' '))
+                self.wlogsent(IP, port, backsend.replace('\r\n', ' '))
+                self.wfile.write(bytes(final_mssg, 'utf-8'))
 
         registerfile = self.xml_dicc['database']['path']     
         self.json2registered(registerfile, self.client_dicc)
