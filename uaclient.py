@@ -13,7 +13,6 @@ import xml.etree.ElementTree as ET
 import threading
 import time
 
-
 class UAClient:
     xml_dicc = {}
     message = ''
@@ -90,14 +89,15 @@ if __name__ == "__main__":
     my_ip = dicc['uaserver']['ip']
     username = dicc['account']['username']
     my_port = dicc['uaserver']['puerto']
+    audio_rute = dicc['audio']['path']
 
     if my_ip == '':
         my_ip = '127.0.0.1'
 
     sip_message = client.building_sip(username, rtp_port, my_ip, my_port)
 
-    def manolo(self, ip='', port=''):
-        listen = 'cvlc rtp://@' + ip + ':' + str(port)
+    def cvlc(self, ip='', port=''):
+        listen = 'cvlc rtp://@' + ip + ':' + str(port) + ' 2> /dev/null'
         os.system(listen)
 
     def mp32rtp(self, ip='', port='', audio_rute=''):
@@ -163,25 +163,23 @@ if __name__ == "__main__":
                 print(rtp_servport)
                 client.wlogsent(ip_server, rtp_servport, "Enviando audio")
                 client.wlogrecv(ip_server, rtp_servport, "Recibiendo audio")
-                escuchar = 'cvlc rtp://@' + my_ip + ':' + rtp_port
-                aEjecutar = 'mp32rtp -i ' + ip_server + ' -p ' + rtp_servport
-                aEjecutar += ' < ' + audio_rute
-                # os.system(escuchar)
 
-                cvlc_thread = threading.Thread(target=manolo,
-                                               args=(my_ip, rtp_port))
-                mp32rtp_thread = threading.Thread(target=mp32rtp,
-                                                  args=(ip_server,
-                                                        rtp_servport,
-                                                        audio_rute))
+                #_thread.start_new_thread(mp32rtp, (ip_server, rtp_servport, audio_rute))
+                #_thread.start_new_thread(cvlc, (my_ip, rtp_port))
+                cvlc_thread = threading.Thread(target=cvlc, args=(my_ip, rtp_port))
+                mp32rtp_thread = threading.Thread(target=mp32rtp, args=(ip_server, rtp_servport, audio_rute))
 
-                mp32rtp_thread.start()
-                time.sleep(1)
                 cvlc_thread.start()
+                print('1')
+                time.sleep(1)
+                mp32rtp_thread.start()
 
-                time.sleep(20)
-                os.system('kill all vlc')
+                time.sleep(15)
+                os.system('killall mp32rtp')
+                os.system('killall vlc')
+                sys.exit("Acabando servidor...")
 
     client.logfile('Finishing...')
+    my_socket.close()
 
 print("Fin.")

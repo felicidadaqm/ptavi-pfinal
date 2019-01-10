@@ -164,7 +164,11 @@ class Proxy:
         else:
             participant = 'no'
 
-        return participant  
+        return participant
+
+    def addparticipant(self, username='', partlist=[]):
+        if not username in partlist:
+            partlist.append(username)
 
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
@@ -247,7 +251,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             # ENVIO A LA DIRECCIÓN QUE ESTÁ EN LA INVITACIÓN
             port = str(self.client_address[1])
             inv_address = request[1][request[1].find(':')+1:]
-            self.conver_participants.append(inv_address)
+            self.addparticipant(inv_address, self.conver_participants)
 
             print('---------------------- PRUEBAS CABECERA ADICIONAL')
 
@@ -255,7 +259,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 princip = self.aditionalheader(lines[0], '')
                 final_messg = princip + lines[1] + '\r\n' + ''.join(lines[2:])
                 sender_address = request[6][request[6].find("=")+1:]
-                self.conver_participants.append(sender_address)
+                self.addparticipant(sender_address, self.conver_participants)
                 registered = self.checkregistered(sender_address)
             elif request[0] == 'BYE':
                 participant = self.checkifparticipant(inv_address, self.conver_participants)
@@ -297,6 +301,9 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     final_mssg = self.aditionalheader('\r\n'.join(spliting_mssg[:7]), '\r\n') 
                     final_mssg += '\r\n'.join(spliting_mssg[8:])
                     print('-----------------------PRUEBA 100')
+                    print(final_mssg)
+                else:
+                    final_mssg = self.aditionalheader(backsend)
                     print(final_mssg)
                 self.wlogrecv(IP, port, backsend.replace('\r\n', ' '))
                 self.wlogsent(invited_ip, invited_port, final_mssg.replace('\r\n', ' '))

@@ -66,8 +66,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
     """
     rtp_info = {}
 
-    def manolo(self, ip='', port=''):
-        listen = 'cvlc rtp://@' + ip + ':' + str(port)
+    def cvlc(self, ip='', port=''):
+        listen = 'cvlc rtp://@' + ip + ':' + str(port) + ' 2> /dev/null'
         os.system(listen)
 
     def mp32rtp(self, ip='', port='', audio_rute=''):
@@ -83,6 +83,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         proxy_ip = self.xml_dicc['regproxy']['ip']
         proxy_port = self.xml_dicc['regproxy']['puerto']
         my_rtp = self.xml_dicc['rtpaudio']['puerto']
+        audio_rute = self.xml_dicc['audio']['path']
 
         for line in self.rfile:
             print("El cliente nos manda " + line.decode('utf-8'))
@@ -93,59 +94,62 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
                 received_message = line.decode('utf-8')
                 lines.append(received_message)
 
-        prueba = ''.join(lines)
-        prueba1 = prueba.replace('\r\n', ' ')
-        request = prueba1.split(' ')
+        message = ''.join(lines)
+        message1line = message.replace('\r\n', ' ')
+        request = message1line.split(' ')
         print(request)
         print("-----------------------")
         
-        recv_event = "Received from " + proxy_ip + ":" + proxy_port + ": " + prueba1
+        recv_event = "Received from " + proxy_ip + ":" + proxy_port + ": " + message1line
         sender_ip = self.client_address[0]
         sender_port = str(self.client_address[1])
-        self.wlogrecv(sender_ip, sender_port, prueba1)
+        self.wlogrecv(sender_ip, sender_port, message1line)
 
         if request[0] == 'INVITE' and request[2] == 'SIP/2.0':
             print('----------------')
             invited = request[9][request[9].find('=')+1:]
             print(invited)
-            SDP = "SIP/2.0 200 OK\r\n\r\n" + 'INVITE sip:' + invited + ' SIP/2.0\r\n'
-            SDP += 'Content-Type: application/sdp\r\n\r\n'
-            SDP += 'v=0\r\n' + 'o=' + self.xml_dicc['account']['username']
-            SDP += ' ' + '127.0.0.1\r\n' + 't=0\r\n'
-            SDP += 'm=audio ' + my_rtp
-            self.wfile.write(b'SIP/2.0 100 Trying\r\n\r\n')
-            self.wfile.write(b'SIP/2.0 180 Ringing\r\n\r\n')
-            self.wfile.write(bytes(SDP, 'utf-8'))
-            self.rtp_info[request[10]] = request[14]
 
-            self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 100 Trying")
-            self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 180 Ringing")
-            self.wlogsent(proxy_ip, proxy_port, SDP.replace('\r\n', ' '))
+            ip = self.client_address[0]
+            port = request[14]
+
+            print(threading.Thread(target=self.mp32rtp, args=(ip, port, audio_rute)).is_alive())
+            if threading.Thread(target=self.mp32rtp, args=(ip, port, audio_rute)).is_alive():
+                response = 'SIP/2.0 480 Temporarily Unavailable\r\n\r\n'
+                self.wfile.write(bytes(response, 'utf-8'))
+                self.wlogsent(proxy_ip, proxy_port, response.replace('\r\n', ' '))
+            else:
+                SDP = "SIP/2.0 200 OK\r\n\r\n" + 'INVITE sip:' + invited + ' SIP/2.0\r\n'
+                SDP += 'Content-Type: application/sdp\r\n\r\n'
+                SDP += 'v=0\r\n' + 'o=' + self.xml_dicc['account']['username']
+                SDP += ' ' + '127.0.0.1\r\n' + 't=0\r\n'
+                SDP += 'm=audio ' + my_rtp
+                self.wfile.write(b'SIP/2.0 100 Trying\r\n\r\n')
+                self.wfile.write(b'SIP/2.0 180 Ringing\r\n\r\n')
+                self.wfile.write(bytes(SDP, 'utf-8'))
+                self.rtp_info[request[10]] = request[14]
+
+                self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 100 Trying")
+                self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 180 Ringing")
+                self.wlogsent(proxy_ip, proxy_port, SDP.replace('\r\n', ' '))
 
         elif request[0] == 'BYE':
             self.wfile.write(b'SIP/2.0 200 OK\r\n\r\n')
             self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 200 OK")
-            os.system('kill all vlc')
-            os.system('kill all mp32rtp')
+            os.system('killall vlc')
+            os.system('killall mp32rtp')
 
         elif request[0] == 'ACK':
-            audio_rute = self.xml_dicc['audio']['path']
             ip = self.client_address[0]
             port = self.rtp_info[ip]
             print(port)
-            #aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + port + ' < ' + audio_rute
-            #print("Vamos a ejecutar: " + aEjecutar)
-            #os.system(aEjecutar)
 
-            cvlc_thread = threading.Thread(target=self.manolo, args=(ip, port))
+            cvlc_thread = threading.Thread(target=self.cvlc, args=(ip, port))
             mp32rtp_thread = threading.Thread(target=self.mp32rtp, args=(ip, port, audio_rute))
 
             mp32rtp_thread.start()
             time.sleep(1)
             cvlc_thread.start()
-
-            time.sleep(20)
-            os.system('kill all vlc')
 
             self.wlogsent(ip, my_rtp, "Enviando audio")
             self.wlogrecv(ip, port, "Recibiendo audio")
