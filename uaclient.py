@@ -97,20 +97,11 @@ if __name__ == "__main__":
 
     sip_message = client.building_sip(username, rtp_port, my_ip, my_port)
 
-    def cvlc(self, ip='', port=''):
-        listen = 'cvlc rtp://@' + ip + ':' + str(port) + ' 2> /dev/null'
-        os.system(listen)
-
-    def mp32rtp(self, ip='', port='', audio_rute=''):
-        aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + str(port)
-        aEjecutar += ' < ' + audio_rute
-        os.system(aEjecutar)
-
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         my_socket.connect((proxy_ip, int(proxy_port)))
-        print("Enviamos:\r\n" + sip_message)
+        print("Enviamos:\r\n" + sip_message + "\r\n")
         my_socket.send(bytes(sip_message, 'utf-8') + b'\r\n\r\n')
         client.wlogsent(proxy_ip, proxy_port, sip_message.replace('\r\n', ' '))
 
@@ -122,8 +113,6 @@ if __name__ == "__main__":
             client.logfile(EVENT)
             sys.exit('Nada escuchando')
 
-        print('Recibido -- \r\n', data.decode('utf-8'))
-
         lines = []
         if data.decode('utf-8') != '':
             received = data.decode('utf-8')
@@ -134,6 +123,8 @@ if __name__ == "__main__":
             client.wlogrecv(proxy_ip, proxy_port, log_recv)
 
             request = log_recv.split(' ')
+
+            print("Recibimos:\r\n" + recv)
 
             if '401' in received:
                 response = sip_message + '\r\n'
@@ -151,9 +142,6 @@ if __name__ == "__main__":
 
             elif '100' and '180' in received:
                 receiver = request[20][request[20].find('=')+1:]
-                print('--------------- PRUEBA CABECERAS')
-                print(request)
-                print(receiver)
                 response = "ACK sip:" + receiver + " SIP/2.0"
                 client.wlogsent(proxy_ip, proxy_port, response)
                 my_socket.send(bytes(response, 'utf-8') + b'\r\n\r\n')
@@ -161,28 +149,15 @@ if __name__ == "__main__":
                 audio_rute = dicc['audio']['path']
                 ip_server = request[21]
                 rtp_servport = request[24]
-                print(rtp_servport)
+                print('------- ENVIANDO Y RECIBIENDO AUDIO -------')
+                print('------- ESPERE POR FAVOR --------')
                 client.wlogsent(ip_server, rtp_servport, "Enviando audio")
                 client.wlogrecv(ip_server, rtp_servport, "Recibiendo audio")
 
-                cvlc_thread = threading.Thread(target=cvlc,
-                                               args=(my_ip, rtp_port))
-                mp32rtp_thread = threading.Thread(target=mp32rtp,
-                                                  args=(ip_server,
-                                                        rtp_servport,
-                                                        audio_rute))
-
-                cvlc_thread.start()
-                print('1')
-                time.sleep(1)
-                mp32rtp_thread.start()
-
-                time.sleep(15)
-                os.system('killall mp32rtp')
-                os.system('killall vlc')
-                sys.exit("Acabando servidor...")
+                rtp = 'mp32rtp -i ' + ip_server + ' -p ' + rtp_servport
+                rtp += ' < ' + audio_rute
+                os.system(rtp)
 
     client.logfile('Finishing...')
-    my_socket.close()
 
 print("Fin.")

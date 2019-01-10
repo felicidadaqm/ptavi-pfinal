@@ -119,7 +119,7 @@ class Proxy:
             print("No se puede borrar, usuario no encontrado")
 
     def aditionalheader(self, message='', eol=''):
-        """ Ads an aditional proxy header """
+        """ Ads an aditional proxy """
         ip = self.xml_dicc['server']['ip']
         port = self.xml_dicc['server']['puerto']
         proxy_header = eol + "Via: SIP/2.0/UDP " + ip + ":"
@@ -165,6 +165,7 @@ class Proxy:
 
     def checkifparticipant(self, username='', partlist=[]):
         participant = ''
+        print(partlist)
         if username in partlist:
             participant = 'yes'
         else:
@@ -270,8 +271,9 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 sender_address = request[6][request[6].find("=")+1:]
                 self.addparticipant(sender_address, self.conver_participants)
                 registered = self.checkregistered(sender_address)
+                self.client_info[inv_address] = sender_address
             elif request[0] == 'BYE':
-                participant = self.checkifparticipant(sender_address,
+                participant= self.checkifparticipant(self.client_info[inv_address],
                                                       self.conver_participants)
                 final_messg = self.aditionalheader(message)
                 self.conver_participants = []

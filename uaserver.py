@@ -21,7 +21,7 @@ class UAServer():
     message = ''
 
     def config(self):
-        # SACO LA CONFIGURACIÓN DE XML
+        """ Gets configuration from a xml file """
         tree = ET.parse(sys.argv[1])
         root = tree.getroot()
         for branch in root:
@@ -89,8 +89,6 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         audio_rute = self.xml_dicc['audio']['path']
 
         for line in self.rfile:
-            print("El cliente nos manda " + line.decode('utf-8'))
-
             if line.decode('utf-8') == '\r\n' or not line:
                 continue
             else:
@@ -100,8 +98,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         message = ''.join(lines)
         message1line = message.replace('\r\n', ' ')
         request = message1line.split(' ')
-        print(request)
-        print("-----------------------")
+
+        print("Recibimos:\r\n" + message)
 
         sender_ip = self.client_address[0]
         sender_port = str(self.client_address[1])
@@ -115,12 +113,11 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             ip = self.client_address[0]
             port = request[14]
 
-            print(threading.Thread(target=self.mp32rtp,
-                                   args=(ip, port, audio_rute)).is_alive())
             if threading.Thread(target=self.mp32rtp,
                                 args=(ip, port,
                                       audio_rute)).is_alive():
                 response = 'SIP/2.0 480 Temporarily Unavailable\r\n\r\n'
+                print("El servidor está temporalmente ocupado")
                 self.wfile.write(bytes(response, 'utf-8'))
                 self.wlogsent(proxy_ip, proxy_port,
                               response.replace('\r\n', ' '))
@@ -146,11 +143,14 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             os.system('killall vlc')
             os.system('killall mp32rtp')
 
+            print("SI")
+
         elif request[0] == 'ACK':
             ip = self.client_address[0]
             port = self.rtp_info[ip]
-            print(port)
 
+            print('------- RECIBIENDO Y ENVIANDO AUDIO -------')
+            print('------- ESPERE POR FAVOR -------')
             cvlc_thread = threading.Thread(target=self.cvlc, args=(ip, port))
             mp32rtp_thread = threading.Thread(target=self.mp32rtp,
                                               args=(ip, port, audio_rute))
