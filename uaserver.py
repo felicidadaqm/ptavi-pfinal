@@ -93,6 +93,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         recv_event = "Received from " + proxy_ip + ":" + proxy_port + ": " + prueba1
         sender_ip = self.client_address[0]
         sender_port = str(self.client_address[1])
+        print(sender_ip, sender_port)
         self.wlogrecv(sender_ip, sender_port, prueba1)
 
         if request[0] == 'INVITE' and request[2] == 'SIP/2.0':
