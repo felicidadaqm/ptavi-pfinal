@@ -11,13 +11,14 @@ import json
 import random
 import socket
 
+
 class Proxy:
     client_dicc = {}
     xml_dicc = {}
     passwords_dicc = {}
-    
+
     def config(self):
-    # SACO LA CONFIGURACIÓN DE XML
+        # SACO LA CONFIGURACIÓN DE XML
         tree = ET.parse(sys.argv[1])
         root = tree.getroot()
         for branch in root:
@@ -65,7 +66,7 @@ class Proxy:
         my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         my_socket.connect((ip, port))
-        my_socket.send(bytes(message, 'utf-8') + b'\r\n')   
+        my_socket.send(bytes(message, 'utf-8') + b'\r\n')
 
         try:
             data = my_socket.recv(1024)
@@ -77,7 +78,8 @@ class Proxy:
                 lines.append(received_message)
             recv_mssg = ''.join(lines)
         except ConnectionRefusedError:
-            self.logfile('Error: No server listening at ' + ip + ' port ' + str(port))
+            self.logfile('Error: No server listening at ' + ip +
+                         ' port ' + str(port))
             print("ATENCIÓN!!! No hay ningún servidor escuchando")
         return recv_mssg
 
@@ -99,7 +101,7 @@ class Proxy:
         """
         Searchs for expired users
         """
-        user_list = []      
+        user_list = []
         for username in self.client_dicc:
             expiration = self.client_dicc[username][3]
             actual_time = datetime.now()
@@ -115,7 +117,8 @@ class Proxy:
     def aditionalheader(self, message='', eol=''):
         ip = self.xml_dicc['server']['ip']
         port = self.xml_dicc['server']['puerto']
-        proxy_header = eol + "Via: SIP/2.0/UDP " + ip + ":" + port + ";rport;branch=PASAMOSPORPOROXY\r\n"
+        proxy_header = eol + "Via: SIP/2.0/UDP " + ip + ":"
+        proxy_header += port + ";rport;branch=PASAMOSPORPOROXY\r\n"
         final_messg = message + proxy_header
         return final_messg
 
@@ -132,7 +135,7 @@ class Proxy:
                     biggest_num = int(number)
 
             if biggest_num < 0 or biggest_num > 255:
-                validez = 'no valida' 
+                validez = 'no valida'
             else:
                 validez = 'valida'
         return validez
@@ -167,7 +170,7 @@ class Proxy:
         return participant
 
     def addparticipant(self, username='', partlist=[]):
-        if not username in partlist:
+        if username not in partlist:
             partlist.append(username)
 
 
@@ -195,7 +198,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 continue
             else:
                 received_message = line.decode('utf-8')
-                lines.append(received_message) 
+                lines.append(received_message)
 
         message = ''.join(lines)
         logextra = message.replace('\r\n', ' ')
@@ -220,15 +223,17 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             if 'Authorization:' in request and validez_port == 'valido':
                 response = "SIP/2.0 200 OK\r\n"
                 self.wfile.write(bytes(response, 'utf-8'))
-                passwd = request[7][request[7].find('"')+1:request[7].rfind('"')]
+                passwd = request[7][request[7].find('"')+1:
+                                    request[7].rfind('"')]
                 now = datetime.now()
                 reg_time = now.timestamp()
                 expires = float(request[4]) + reg_time
+                passwd_comprobation = self.checkpasswd(passwd, address)
 
-                if request[4] == '0' and self.checkpasswd(passwd, address) == 'coincide':
+                if request[4] == '0' and passwd_comprobation == 'coincide':
                     print("\n" + "Recibida petición de borrado")
                     del self.client_dicc[address]
-                elif self.checkpasswd(passwd, address) == 'coincide':
+                elif passwd_comprobation == 'coincide':
                     print("Usuario correcto, registramos")
                     self.client_dicc[address] = [IP, port, reg_time, expires]
                 else:
@@ -237,15 +242,15 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     self.wfile.write(bytes(response, 'utf-8'))
                     self.wlogsent(IP, port, response.replace('\r\n', ' '))
 
-            elif not 'Authorization:' in request and validez_port == 'valido':
+            elif 'Authorization:' not in request and validez_port == 'valido':
                 nonce = random.randint(0, 999999999999999999999)
                 response = 'SIP/2.0 401 Unathorized\r\n\r\n'
-                response += 'WWW Authenticate: Digest nonce="' + str(nonce) + '"' + '\r\n\r\n'
+                response += 'WWW Authenticate: Digest nonce="' + str(nonce)
+                response += '"' + '\r\n\r\n'
                 self.wfile.write(bytes(response, 'utf-8'))
 
             self.wlogrecv(IP, recv_port, logextra)
             self.wlogsent(IP, port, response.replace('\r\n', ' '))
-
 
         elif request[0] != 'REGISTER' and validez_ip == 'valida':
             # ENVIO A LA DIRECCIÓN QUE ESTÁ EN LA INVITACIÓN
@@ -262,7 +267,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 self.addparticipant(sender_address, self.conver_participants)
                 registered = self.checkregistered(sender_address)
             elif request[0] == 'BYE':
-                participant = self.checkifparticipant(inv_address, self.conver_participants)
+                participant = self.checkifparticipant(inv_address,
+                                                      self.conver_participants)
                 final_messg = self.aditionalheader(message)
                 self.conver_participants = []
             else:
@@ -270,7 +276,13 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
 
             print(self.conver_participants)
 
-            if registered == 'ok' or request[0] == 'ACK' or participant == 'yes':
+            comprobations = ''
+            if registered == 'ok' and participant == 'yes':
+                comprobations = 'correcto'
+            else:
+                comprobations = 'incorrecto'
+
+            if comprobations == 'correcto' or request[0] == 'ACK':
                 try:
                     print("Todo correcto, reenviamos: " + final_messg)
                     invited_ip = self.client_dicc[inv_address][0]
@@ -284,7 +296,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
                     print('Enviamos 404 user not found')
 
-                self.wlogsent(invited_ip, str(invited_port), final_messg.replace('\r\n', ' '))
+                self.wlogsent(invited_ip, str(invited_port),
+                              final_messg.replace('\r\n', ' '))
 
             elif registered == 'no':
                 response = 'SIP/2.0 401 Unathorized\r\n\r\n'
@@ -293,12 +306,13 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 self.wlogsent(IP, port, response.replace('\r\n', ' '))
                 print("Usuario que intenta enviar invite no está registrado")
 
-
             # SI LA RESPUESTA A RESEND TIENE ALGO, LA ENVIO DE VUELTA
             if backsend != '':
                 if '200' in backsend:
                     spliting_mssg = backsend.split('\r\n')
-                    final_mssg = self.aditionalheader('\r\n'.join(spliting_mssg[:7]), '\r\n') 
+                    final_mssg = self.aditionalheader('\r\n'.join(
+                                                      spliting_mssg[:7]),
+                                                      '\r\n')
                     final_mssg += '\r\n'.join(spliting_mssg[8:])
                     print('-----------------------PRUEBA 100')
                     print(final_mssg)
@@ -306,7 +320,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     final_mssg = self.aditionalheader(backsend)
                     print(final_mssg)
                 self.wlogrecv(IP, port, backsend.replace('\r\n', ' '))
-                self.wlogsent(invited_ip, invited_port, final_mssg.replace('\r\n', ' '))
+                self.wlogsent(invited_ip, invited_port,
+                              final_mssg.replace('\r\n', ' '))
                 self.wfile.write(bytes(final_mssg, 'utf-8'))
 
         elif validez_ip == 'no valida':
@@ -315,7 +330,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             self.wfile.write(bytes(response, 'utf-8'))
             self.logfile('Error: Not a valid IP')
 
-        registerfile = self.xml_dicc['database']['path']     
+        registerfile = self.xml_dicc['database']['path']
         self.json2registered(registerfile, self.client_dicc)
         self.timeout()
         print(self.client_dicc)
@@ -337,7 +352,8 @@ if __name__ == "__main__":
 
     prox.logfile("Starting...")
     serv = socketserver.UDPServer((proxy_ip, proxy_port), EchoHandler)
-    print("Server " + proxy_name + " listening at port " + str(proxy_port) + " . . .")
+    print("Server " + proxy_name + " listening at port " +
+          str(proxy_port) + "...")
 
     try:
         serv.serve_forever()
