@@ -19,7 +19,7 @@ class UAClient:
     message = ''
 
     def config(self):
-        # SACO LA CONFIGURACIÓN DE XML
+        """ Gets configuration from xml file """
         tree = ET.parse(sys.argv[1])
         root = tree.getroot()
         for branch in root:
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         my_socket.connect((proxy_ip, int(proxy_port)))
-        print("Enviamos:" + sip_message)
+        print("Enviamos:\r\n" + sip_message)
         my_socket.send(bytes(sip_message, 'utf-8') + b'\r\n\r\n')
         client.wlogsent(proxy_ip, proxy_port, sip_message.replace('\r\n', ' '))
 
