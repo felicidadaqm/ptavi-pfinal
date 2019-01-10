@@ -13,12 +13,13 @@ import xml.etree.ElementTree as ET
 import threading
 import time
 
+
 class UAClient:
     xml_dicc = {}
     message = ''
 
     def config(self):
-    # SACO LA CONFIGURACIÓN DE XML
+        # SACO LA CONFIGURACIÓN DE XML
         tree = ET.parse(sys.argv[1])
         root = tree.getroot()
         for branch in root:
@@ -48,18 +49,18 @@ class UAClient:
 
     def building_sip(self, username='', rtp_port='', my_ip='', my_port=''):
         self.config()
-     
         method = sys.argv[2]
         option = sys.argv[3]
-        
+
         if method == 'REGISTER':
-            self.message = method + ' sip:' + username + ':' + my_port + ' SIP/2.0\r\n'
-            self.message += 'Expires: ' + option
+            self.message = method + ' sip:' + username + ':' + my_port
+            self.message += ' SIP/2.0\r\n' + 'Expires: ' + option
         elif method == 'INVITE':
             self.message = method + ' sip:' + option + ' SIP/2.0\r\n'
             self.message += 'Content-Type: application/sdp\r\n' + '\r\n'
             self.message += 'v=0\r\n' + 'o=' + username + ' ' + my_ip + '\r\n'
-            self.message += 's=misesion\r\n' + 't=0\r\n' + 'm=audio ' + rtp_port + ' RTP\r\n'
+            self.message += 's=misesion\r\n' + 't=0\r\n' + 'm=audio '
+            self.message += rtp_port + ' RTP\r\n'
         elif method == 'BYE':
             self.message = method + ' sip:' + option + ' SIP/2.0\r\n'
         else:
@@ -89,7 +90,7 @@ if __name__ == "__main__":
     my_ip = dicc['uaserver']['ip']
     username = dicc['account']['username']
     my_port = dicc['uaserver']['puerto']
-    
+
     if my_ip == '':
         my_ip = '127.0.0.1'
 
@@ -100,7 +101,8 @@ if __name__ == "__main__":
         os.system(listen)
 
     def mp32rtp(self, ip='', port='', audio_rute=''):
-        aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + str(port) + ' < ' + audio_rute
+        aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + str(port)
+        aEjecutar += ' < ' + audio_rute
         os.system(aEjecutar)
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
@@ -114,7 +116,8 @@ if __name__ == "__main__":
         try:
             data = my_socket.recv(1024)
         except ConnectionRefusedError:
-            EVENT = 'Error: No server listening at ' + proxy_ip + ' port ' + proxy_port
+            EVENT = 'Error: No server listening at ' + proxy_ip
+            EVENT += ' port ' + proxy_port
             client.logfile(EVENT)
             sys.exit('Nada escuchando')
 
@@ -140,9 +143,10 @@ if __name__ == "__main__":
                 print(data.decode('utf-8'))
                 recv = data.decode('utf-8')
 
-                client.wlogsent(proxy_ip, proxy_port, response.replace('\r\n', ' '))
-                client.wlogrecv(proxy_ip, proxy_port, recv.replace('\r\n', ' '))
-
+                client.wlogsent(proxy_ip, proxy_port,
+                                response.replace('\r\n', ' '))
+                client.wlogrecv(proxy_ip, proxy_port,
+                                recv.replace('\r\n', ' '))
 
             elif '100' and '180' in received:
                 receiver = request[20][request[20].find('=')+1:]
@@ -160,12 +164,16 @@ if __name__ == "__main__":
                 client.wlogsent(ip_server, rtp_servport, "Enviando audio")
                 client.wlogrecv(ip_server, rtp_servport, "Recibiendo audio")
                 escuchar = 'cvlc rtp://@' + my_ip + ':' + rtp_port
-                aEjecutar = 'mp32rtp -i ' + ip_server + ' -p ' + rtp_servport + ' < ' + audio_rute
-                #os.system(escuchar)
+                aEjecutar = 'mp32rtp -i ' + ip_server + ' -p ' + rtp_servport
+                aEjecutar += ' < ' + audio_rute
+                # os.system(escuchar)
 
-
-                cvlc_thread = threading.Thread(target=manolo, args=(my_ip, rtp_port))
-                mp32rtp_thread = threading.Thread(target=mp32rtp, args=(ip_server, rtp_servport, audio_rute))
+                cvlc_thread = threading.Thread(target=manolo,
+                                               args=(my_ip, rtp_port))
+                mp32rtp_thread = threading.Thread(target=mp32rtp,
+                                                  args=(ip_server,
+                                                        rtp_servport,
+                                                        audio_rute))
 
                 mp32rtp_thread.start()
                 time.sleep(1)
@@ -174,6 +182,6 @@ if __name__ == "__main__":
                 time.sleep(20)
                 os.system('kill all vlc')
 
-    client.logfile('Finishing...') 
+    client.logfile('Finishing...')
 
 print("Fin.")
