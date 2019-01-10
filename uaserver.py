@@ -15,12 +15,13 @@ from datetime import datetime, timedelta
 import threading
 import time
 
+
 class UAServer():
     xml_dicc = {}
     message = ''
 
     def config(self):
-    # SACO LA CONFIGURACIÓN DE XML
+        # SACO LA CONFIGURACIÓN DE XML
         tree = ET.parse(sys.argv[1])
         root = tree.getroot()
         for branch in root:
@@ -60,6 +61,7 @@ class UAServer():
             recv1 = recv.replace('\r\n', ' ')
             return recv1
 
+
 class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
     """
     Echo server class
@@ -71,7 +73,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         os.system(listen)
 
     def mp32rtp(self, ip='', port='', audio_rute=''):
-        aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + str(port) + ' < ' + audio_rute
+        aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + str(port)
+        aEjecutar += ' < ' + audio_rute
         os.system(aEjecutar)
 
     def handle(self):
@@ -99,8 +102,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         request = message1line.split(' ')
         print(request)
         print("-----------------------")
-        
-        recv_event = "Received from " + proxy_ip + ":" + proxy_port + ": " + message1line
+
         sender_ip = self.client_address[0]
         sender_port = str(self.client_address[1])
         self.wlogrecv(sender_ip, sender_port, message1line)
@@ -113,13 +115,18 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             ip = self.client_address[0]
             port = request[14]
 
-            print(threading.Thread(target=self.mp32rtp, args=(ip, port, audio_rute)).is_alive())
-            if threading.Thread(target=self.mp32rtp, args=(ip, port, audio_rute)).is_alive():
+            print(threading.Thread(target=self.mp32rtp,
+                                   args=(ip, port, audio_rute)).is_alive())
+            if threading.Thread(target=self.mp32rtp,
+                                args=(ip, port,
+                                      audio_rute)).is_alive():
                 response = 'SIP/2.0 480 Temporarily Unavailable\r\n\r\n'
                 self.wfile.write(bytes(response, 'utf-8'))
-                self.wlogsent(proxy_ip, proxy_port, response.replace('\r\n', ' '))
+                self.wlogsent(proxy_ip, proxy_port,
+                              response.replace('\r\n', ' '))
             else:
-                SDP = "SIP/2.0 200 OK\r\n\r\n" + 'INVITE sip:' + invited + ' SIP/2.0\r\n'
+                SDP = "SIP/2.0 200 OK\r\n\r\n" + 'INVITE sip:'
+                SDP += invited + ' SIP/2.0\r\n'
                 SDP += 'Content-Type: application/sdp\r\n\r\n'
                 SDP += 'v=0\r\n' + 'o=' + self.xml_dicc['account']['username']
                 SDP += ' ' + '127.0.0.1\r\n' + 't=0\r\n'
@@ -145,7 +152,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             print(port)
 
             cvlc_thread = threading.Thread(target=self.cvlc, args=(ip, port))
-            mp32rtp_thread = threading.Thread(target=self.mp32rtp, args=(ip, port, audio_rute))
+            mp32rtp_thread = threading.Thread(target=self.mp32rtp,
+                                              args=(ip, port, audio_rute))
 
             mp32rtp_thread.start()
             time.sleep(1)
@@ -155,7 +163,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             self.wlogrecv(ip, port, "Recibiendo audio")
         elif request[0] != ('INVITE' and 'BYE' and 'ACK' and 'REGISTER'):
             self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n\r\n')
-            self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 405 Method Not Allowed")
+            self.wlogsent(proxy_ip, proxy_port,
+                          "SIP/2.0 405 Method Not Allowed")
             print("Hemos recibido una petición inválida.")
         elif request[2] != 'SIP/2.0':
             self.wfile.write(b'SIP/2.0 400 Bad Request\r\n\r\n')
@@ -184,6 +193,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         server.logfile("Finishing...")
         print("uaserver terminado")
-
-
-
