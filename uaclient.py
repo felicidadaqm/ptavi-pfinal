@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 import os.path
 import os
 import xml.etree.ElementTree as ET
+import threading
+import time
 
 class UAClient:
     xml_dicc = {}
@@ -93,6 +95,14 @@ if __name__ == "__main__":
 
     sip_message = client.building_sip(username, rtp_port, my_ip, my_port)
 
+    def manolo(self, ip='', port=''):
+        listen = 'cvlc rtp://@' + ip + ':' + str(port)
+        os.system(listen)
+
+    def mp32rtp(self, ip='', port='', audio_rute=''):
+        aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + str(port) + ' < ' + audio_rute
+        os.system(aEjecutar)
+
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -153,9 +163,16 @@ if __name__ == "__main__":
                 aEjecutar = 'mp32rtp -i ' + ip_server + ' -p ' + rtp_servport + ' < ' + audio_rute
                 #os.system(escuchar)
 
-                print("Vamos a ejecutar: " + aEjecutar)
-                os.system(aEjecutar)
 
+                cvlc_thread = threading.Thread(target=manolo, args=(my_ip, rtp_port))
+                mp32rtp_thread = threading.Thread(target=mp32rtp, args=(ip_server, rtp_servport, audio_rute))
+
+                mp32rtp_thread.start()
+                time.sleep(1)
+                cvlc_thread.start()
+
+                time.sleep(20)
+                os.system('kill all vlc')
 
     client.logfile('Finishing...') 
 

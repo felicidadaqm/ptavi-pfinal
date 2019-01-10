@@ -61,7 +61,7 @@ class Proxy:
         self.logfile(recv_event)
 
     def resend(self, ip='', port='', message=''):
-        prueba = ''
+        recv_mssg = ''
         my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         my_socket.connect((ip, port))
@@ -75,11 +75,11 @@ class Proxy:
             else:
                 received_message = data.decode('utf-8')
                 lines.append(received_message)
-            prueba = ''.join(lines)
+            recv_mssg = ''.join(lines)
         except ConnectionRefusedError:
             self.logfile('Error: No server listening at ' + ip + ' port ' + str(port))
             print("ATENCIÓN!!! No hay ningún servidor escuchando")
-        return prueba
+        return recv_mssg
 
     def checkpasswd(self, passwd='', user=''):
         self.config()
@@ -193,9 +193,9 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 received_message = line.decode('utf-8')
                 lines.append(received_message) 
 
-        prueba = ''.join(lines)
-        prueba1 = prueba.replace('\r\n', ' ')
-        request = prueba1.split(' ')
+        message = ''.join(lines)
+        logextra = message.replace('\r\n', ' ')
+        request = logextra.split(' ')
 
         IP = self.client_address[0]
         recv_port = str(self.client_address[1])
@@ -239,7 +239,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 response += 'WWW Authenticate: Digest nonce="' + str(nonce) + '"' + '\r\n\r\n'
                 self.wfile.write(bytes(response, 'utf-8'))
 
-            self.wlogrecv(IP, recv_port, prueba1)
+            self.wlogrecv(IP, recv_port, logextra)
             self.wlogsent(IP, port, response.replace('\r\n', ' '))
 
 
@@ -259,9 +259,10 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 registered = self.checkregistered(sender_address)
             elif request[0] == 'BYE':
                 participant = self.checkifparticipant(inv_address, self.conver_participants)
-                final_messg = self.aditionalheader(prueba)
+                final_messg = self.aditionalheader(message)
+                self.conver_participants = []
             else:
-                final_messg = self.aditionalheader(prueba)
+                final_messg = self.aditionalheader(message)
 
             print(self.conver_participants)
 
@@ -270,11 +271,9 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     print("Todo correcto, reenviamos: " + final_messg)
                     invited_ip = self.client_dicc[inv_address][0]
                     invited_port = self.client_dicc[inv_address][1]
-                    print(final_messg)
 
-                    prueba = final_messg
-                    backsend = self.resend('', int(invited_port), prueba)
-                    self.wlogrecv(IP, port, prueba1)
+                    backsend = self.resend('', int(invited_port), final_messg)
+                    self.wlogrecv(IP, port, logextra)
                 except KeyError:
                     invited_ip = IP
                     invited_port = port
@@ -286,7 +285,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             elif registered == 'no':
                 response = 'SIP/2.0 401 Unathorized\r\n\r\n'
                 self.wfile.write(bytes(response, 'utf-8'))
-                self.wlogrecv(IP, port, prueba1)
+                self.wlogrecv(IP, port, logextra)
                 self.wlogsent(IP, port, response.replace('\r\n', ' '))
                 print("Usuario que intenta enviar invite no está registrado")
 

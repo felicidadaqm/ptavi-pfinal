@@ -12,6 +12,8 @@ import xml.etree.ElementTree as ET
 import os.path
 import socket
 from datetime import datetime, timedelta
+import threading
+import time
 
 class UAServer():
     xml_dicc = {}
@@ -58,12 +60,19 @@ class UAServer():
             recv1 = recv.replace('\r\n', ' ')
             return recv1
 
-
 class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
     """
     Echo server class
     """
     rtp_info = {}
+
+    def manolo(self, ip='', port=''):
+        listen = 'cvlc rtp://@' + ip + ':' + str(port)
+        os.system(listen)
+
+    def mp32rtp(self, ip='', port='', audio_rute=''):
+        aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + str(port) + ' < ' + audio_rute
+        os.system(aEjecutar)
 
     def handle(self):
         """
@@ -116,15 +125,28 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         elif request[0] == 'BYE':
             self.wfile.write(b'SIP/2.0 200 OK\r\n\r\n')
             self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 200 OK")
+            os.system('kill all vlc')
+            os.system('kill all mp32rtp')
 
         elif request[0] == 'ACK':
             audio_rute = self.xml_dicc['audio']['path']
             ip = self.client_address[0]
             port = self.rtp_info[ip]
             print(port)
-            aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + port + ' < ' + audio_rute
-            print("Vamos a ejecutar: " + aEjecutar)
-            os.system(aEjecutar)
+            #aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + port + ' < ' + audio_rute
+            #print("Vamos a ejecutar: " + aEjecutar)
+            #os.system(aEjecutar)
+
+            cvlc_thread = threading.Thread(target=self.manolo, args=(ip, port))
+            mp32rtp_thread = threading.Thread(target=self.mp32rtp, args=(ip, port, audio_rute))
+
+            mp32rtp_thread.start()
+            time.sleep(1)
+            cvlc_thread.start()
+
+            time.sleep(20)
+            os.system('kill all vlc')
+
             self.wlogsent(ip, my_rtp, "Enviando audio")
             self.wlogrecv(ip, port, "Recibiendo audio")
         elif request[0] != ('INVITE' and 'BYE' and 'ACK' and 'REGISTER'):
