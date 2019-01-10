@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 import threading
 import time
 
+
 class UAClient:
     xml_dicc = {}
     message = ''
@@ -164,10 +165,12 @@ if __name__ == "__main__":
                 client.wlogsent(ip_server, rtp_servport, "Enviando audio")
                 client.wlogrecv(ip_server, rtp_servport, "Recibiendo audio")
 
-                #_thread.start_new_thread(mp32rtp, (ip_server, rtp_servport, audio_rute))
-                #_thread.start_new_thread(cvlc, (my_ip, rtp_port))
-                cvlc_thread = threading.Thread(target=cvlc, args=(my_ip, rtp_port))
-                mp32rtp_thread = threading.Thread(target=mp32rtp, args=(ip_server, rtp_servport, audio_rute))
+                cvlc_thread = threading.Thread(target=cvlc,
+                                               args=(my_ip, rtp_port))
+                mp32rtp_thread = threading.Thread(target=mp32rtp,
+                                                  args=(ip_server,
+                                                        rtp_servport,
+                                                        audio_rute))
 
                 cvlc_thread.start()
                 print('1')
