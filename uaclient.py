@@ -147,12 +147,15 @@ if __name__ == "__main__":
                 ip_server = request[21]
                 rtp_servport = request[24]
                 print(rtp_servport)
+                client.wlogsent(ip_server, rtp_servport, "Enviando audio")
+                client.wlogrecv(ip_server, rtp_servport, "Recibiendo audio")
+                escuchar = 'cvlc rtp://@' + my_ip + ':' + rtp_port
                 aEjecutar = 'mp32rtp -i ' + ip_server + ' -p ' + rtp_servport + ' < ' + audio_rute
+                #os.system(escuchar)
+
                 print("Vamos a ejecutar: " + aEjecutar)
                 os.system(aEjecutar)
 
-                escuchar = 'cvlc rtp://@' + my_ip + ':' + rtp_port
-                #os.system(escuchar)
 
     client.logfile('Finishing...') 
 

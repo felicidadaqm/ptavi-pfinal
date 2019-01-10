@@ -73,6 +73,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         lines = []
         proxy_ip = self.xml_dicc['regproxy']['ip']
         proxy_port = self.xml_dicc['regproxy']['puerto']
+        my_rtp = self.xml_dicc['rtpaudio']['puerto']
 
         for line in self.rfile:
             print("El cliente nos manda " + line.decode('utf-8'))
@@ -90,7 +91,9 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
         print("-----------------------")
         
         recv_event = "Received from " + proxy_ip + ":" + proxy_port + ": " + prueba1
-        self.wlogrecv(proxy_ip, proxy_port, prueba1)
+        sender_ip = self.client_address[0]
+        sender_port = str(self.client_address[1])
+        self.wlogrecv(sender_ip, sender_port, prueba1)
 
         if request[0] == 'INVITE' and request[2] == 'SIP/2.0':
             print('----------------')
@@ -100,7 +103,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             SDP += 'Content-Type: application/sdp\r\n\r\n'
             SDP += 'v=0\r\n' + 'o=' + self.xml_dicc['account']['username']
             SDP += ' ' + '127.0.0.1\r\n' + 't=0\r\n'
-            SDP += 'm=audio ' + self.xml_dicc['rtpaudio']['puerto']
+            SDP += 'm=audio ' + my_rtp
             self.wfile.write(b'SIP/2.0 100 Trying\r\n\r\n')
             self.wfile.write(b'SIP/2.0 180 Ringing\r\n\r\n')
             self.wfile.write(bytes(SDP, 'utf-8'))
@@ -122,6 +125,8 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             aEjecutar = 'mp32rtp -i ' + ip + ' -p ' + port + ' < ' + audio_rute
             print("Vamos a ejecutar: " + aEjecutar)
             os.system(aEjecutar)
+            self.wlogsent(ip, my_rtp, "Enviando audio")
+            self.wlogrecv(ip, port, "Recibiendo audio")
         elif request[0] != ('INVITE' and 'BYE' and 'ACK' and 'REGISTER'):
             self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n\r\n')
             self.wlogsent(proxy_ip, proxy_port, "SIP/2.0 405 Method Not Allowed")

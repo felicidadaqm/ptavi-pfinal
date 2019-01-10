@@ -61,20 +61,24 @@ class Proxy:
         self.logfile(recv_event)
 
     def resend(self, ip='', port='', message=''):
+        prueba = ''
         my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         my_socket.connect((ip, port))
         my_socket.send(bytes(message, 'utf-8') + b'\r\n')   
-            
-        data = my_socket.recv(1024)
-        lines = []
-        if data.decode('utf-8') == '\r\n' and data.decode('utf-8') != '':
-            pass
-        else:
-            received_message = data.decode('utf-8')
-            lines.append(received_message)
 
-        prueba = ''.join(lines)
+        try:
+            data = my_socket.recv(1024)
+            lines = []
+            if data.decode('utf-8') == '\r\n' and data.decode('utf-8') == '':
+                pass
+            else:
+                received_message = data.decode('utf-8')
+                lines.append(received_message)
+            prueba = ''.join(lines)
+        except ConnectionRefusedError:
+            self.logfile('Error: No server listening at ' + ip + ' port ' + str(port))
+            print("ATENCIÓN!!! No hay ningún servidor escuchando")
         return prueba
 
     def checkpasswd(self, passwd='', user=''):
@@ -266,10 +270,12 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     print("Todo correcto, reenviamos: " + final_messg)
                     invited_ip = self.client_dicc[inv_address][0]
                     invited_port = self.client_dicc[inv_address][1]
+                    print(final_messg)
 
                     prueba = final_messg
-                    backsend = self.resend('', int(invited_port), prueba) 
-                    self.wlogsent(invited_ip, str(invited_port), prueba1)
+                    backsend = self.resend('', int(invited_port), prueba)
+                    self.wlogrecv(IP, port, prueba1)
+                    self.wlogsent(invited_ip, str(invited_port), final_messg.replace('\r\n', ' '))
                 except KeyError:
                     self.wfile.write(b'SIP/2.0 404 User Not Found\r\n')
                     self.wlogsent(IP, port, "SIP/2.0 404 User Not Found")
@@ -278,10 +284,10 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             elif registered == 'no':
                 response = 'SIP/2.0 401 Unathorized\r\n\r\n'
                 self.wfile.write(bytes(response, 'utf-8'))
+                self.wlogrecv(IP, port, prueba1)
                 self.wlogsent(IP, port, response.replace('\r\n', ' '))
                 print("Usuario que intenta enviar invite no está registrado")
 
-            self.wlogrecv(IP, port, prueba1)
 
             # SI LA RESPUESTA A RESEND TIENE ALGO, LA ENVIO DE VUELTA
             if backsend != '':
@@ -292,7 +298,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     print('-----------------------PRUEBA 100')
                     print(final_mssg)
                 self.wlogrecv(IP, port, backsend.replace('\r\n', ' '))
-                self.wlogsent(IP, port, backsend.replace('\r\n', ' '))
+                self.wlogsent(invited_ip, invited_port, final_mssg.replace('\r\n', ' '))
                 self.wfile.write(bytes(final_mssg, 'utf-8'))
 
         elif validez_ip == 'no valida':
