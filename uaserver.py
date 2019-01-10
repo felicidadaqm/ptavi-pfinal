@@ -143,7 +143,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, UAServer):
             os.system('killall vlc')
             os.system('killall mp32rtp')
 
-            print("SI")
+            print("Si proceso no encontrado -> ha terminado antes de recibir BYE")
 
         elif request[0] == 'ACK':
             ip = self.client_address[0]

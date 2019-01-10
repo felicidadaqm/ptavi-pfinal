@@ -1,0 +1,40 @@
+NOTAS:
+
+    1. Se ha añadido una cabecera de paso por proxy: 
+        "Via: SIP/2.0/UDP " + ip + ":" + port + ";rport;branch=PASAMOSPORPOROXY\r\n"
+
+        Esta cabecera sólo aparece en los mensajes que pasan del
+        proxy a otro ua. Los mensajes de error devueltos por el
+        propio proxy no cuentan con ella.
+
+        IMPORTANTE: Esta cabecera no se refleja en la captura,
+        fue añadida posteriormente.
+
+    2. El hilo clvc sólo ha sido añadido en UAServer
+
+    3. Consistencia frente a errores en proxy, ha sido implementado
+        lo siguiente:
+
+        3.1 Comprobación validez de IP. Se ha comprobado tanto la
+            longitud de la misma como que todos los valores sean
+            válidos y dentro del rango posible. En caso de no serlo,
+            devuelve un 400 Bad Request.
+        3.2 Comprobación validez de puerto. Se ha comprobado que sea
+            un entero. En caso de no serlo, devuelve 400 Bad Request.
+        3.3 Se comprueba que quien hace el INVITE esté registrado,
+            si no lo está, enviamos 401 Unathorized.
+        3.4 Se comprueba que quien hace el BYE sea miembro de la
+            conversación, en caso de no formar parte, se devuelve un
+            401 Unathorized.
+        3.5 Se comprueba que el uaserver esté disponible. En caso de
+            no haber sido lanzado, avisa por pantalla de ello y devuelve
+            un 503 Service Unavailable.
+        3.6 Al comprobar la contraseña, si no coincide con aquella en
+            el registro se devuelve un 401 Unathorized.
+
+    4. Implementación de hilos, con las siguientes consideraciones:
+        4.1 Los hilos del uaserver comienzan a funcionar en cuanto se
+            recibe un ACK válido
+        4.2 Si recibimos un BYE después de haber terminado el envio
+            y escucha de audio se imprimirá por pantalla un "proceso
+            no encontrado", y el significado del mismo.

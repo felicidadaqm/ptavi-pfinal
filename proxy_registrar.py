@@ -85,6 +85,7 @@ class Proxy:
             self.logfile('Error: No server listening at ' + ip +
                          ' port ' + str(port))
             print("ATENCIÓN!!! No hay ningún servidor escuchando")
+            self.wfile.write(bytes("SIP/2.0 503 Service Unavailable\r\n\r\n", 'utf-8'))
         return recv_mssg
 
     def checkpasswd(self, passwd='', user=''):
@@ -262,6 +263,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             port = str(self.client_address[1])
             inv_address = request[1][request[1].find(':')+1:]
             self.addparticipant(inv_address, self.conver_participants)
+            self.wlogrecv(IP, port, logextra)
 
             print('----------AÑADIMOS CABECERA Y REENVIAMOS---------')
 
@@ -296,15 +298,12 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     invited_port = self.client_dicc[inv_address][1]
                     backsend = self.resend('', int(invited_port), final_messg)
                     self.wlogrecv(IP, port, logextra)
+                    self.wlogsent(invited_ip, str(invited_port), final_messg.replace('\r\n', ' '))
 
                 except KeyError:
-                    invited_ip = IP
-                    invited_port = port
                     self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
+                    self.wlogsent(IP, str(port), 'SIP/2.0 404 User Not Found')
                     print('Enviamos 404 user not found')
-
-                self.wlogsent(invited_ip, str(invited_port),
-                              final_messg.replace('\r\n', ' '))
 
                 print("Los participantes de esta conversación son: " +
                        ' '.join(self.conver_participants) + '\r\n')
@@ -329,8 +328,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     final_mssg = self.aditionalheader(backsend)
                     print(final_mssg)
                 self.wlogrecv(IP, port, backsend.replace('\r\n', ' '))
-                self.wlogsent(invited_ip, invited_port,
-                              final_mssg.replace('\r\n', ' '))
+                self.wlogsent(invited_ip, invited_port, final_mssg.replace('\r\n', ' '))
                 self.wfile.write(bytes(final_mssg, 'utf-8'))
 
         elif validez_ip == 'no valida':
