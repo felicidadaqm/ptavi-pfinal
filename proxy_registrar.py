@@ -275,11 +275,13 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     prueba = final_messg
                     backsend = self.resend('', int(invited_port), prueba)
                     self.wlogrecv(IP, port, prueba1)
-                    self.wlogsent(invited_ip, str(invited_port), final_messg.replace('\r\n', ' '))
                 except KeyError:
-                    self.wfile.write(b'SIP/2.0 404 User Not Found\r\n')
-                    self.wlogsent(IP, port, "SIP/2.0 404 User Not Found")
+                    invited_ip = IP
+                    invited_port = port
+                    self.wfile.write(b'SIP/2.0 404 User Not Found\r\n\r\n')
                     print('Enviamos 404 user not found')
+
+                self.wlogsent(invited_ip, str(invited_port), final_messg.replace('\r\n', ' '))
 
             elif registered == 'no':
                 response = 'SIP/2.0 401 Unathorized\r\n\r\n'
