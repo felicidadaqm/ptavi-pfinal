@@ -115,17 +115,68 @@ class Proxy:
         final_messg = message + proxy_header
         return final_messg
 
+    def checkip(self, ip=''):
+        validez = ''
+        ipieces = ip.split('.')
+        biggest_num = 0
+
+        if len(ipieces) != 4:
+            validez = 'no valida'
+        else:
+            for number in ipieces:
+                if int(number) > biggest_num:
+                    biggest_num = int(number)
+
+            if biggest_num < 0 or biggest_num > 255:
+                validez = 'no valida' 
+            else:
+                validez = 'valida'
+        return validez
+
+    def checkport(self, port=''):
+        validez = ''
+
+        if '.' in str(port):
+            validez = 'no valido'
+        else:
+            validez = 'valido'
+        return validez
+
+    def checkregistered(self, username=''):
+        registered = ''
+        if username in self.client_dicc:
+            print('vale')
+            registered = 'ok'
+        else:
+            print('1')
+            registered = 'no'
+
+        return registered
+
+    def checkifparticipant(self, username='', partlist=[]):
+        participant = ''
+        if username in partlist:
+            participant = 'yes'
+        else:
+            participant = 'no'
+
+        return participant  
+
 
 class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
     """
     Echo server class
     """
     client_info = {}
+    conver_participants = []
 
     def handle(self):
         lines = []
         backsend = ''
         final_messg = ''
+        registered = ''
+        sender_address = ''
+        conver_participants = []
 
         if not self.client_dicc:
             self.restablishusers()
@@ -144,13 +195,21 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
 
         IP = self.client_address[0]
         recv_port = str(self.client_address[1])
+        validez_ip = self.checkip(IP)
 
-        if request[0] == 'REGISTER':
+        if request[0] == 'REGISTER' and validez_ip == 'valida':
             address = request[1][request[1].find(':')+1:request[1].rfind(':')]
             port = request[1][request[1].rfind(':')+1:]
+            validez_port = self.checkport(port)
             self.client_info[IP] = port
 
-            if 'Authorization:' in request:
+            if validez_port == 'no valido':
+                print('Valor de puerto no válido')
+                response = '400 Bad Request\r\n\r\n'
+                self.wfile.write(bytes(response, 'utf-8'))
+                self.logfile('Error: Port value is not valid')
+
+            if 'Authorization:' in request and validez_port == 'valido':
                 response = "SIP/2.0 200 OK\r\n"
                 self.wfile.write(bytes(response, 'utf-8'))
                 passwd = request[7][request[7].find('"')+1:request[7].rfind('"')]
@@ -158,7 +217,7 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 reg_time = now.timestamp()
                 expires = float(request[4]) + reg_time
 
-                if expires == '0' and self.checkpasswd(passwd, address) == 'coincide':
+                if request[4] == '0' and self.checkpasswd(passwd, address) == 'coincide':
                     print("\n" + "Recibida petición de borrado")
                     del self.client_dicc[address]
                 elif self.checkpasswd(passwd, address) == 'coincide':
@@ -166,9 +225,11 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                     self.client_dicc[address] = [IP, port, reg_time, expires]
                 else:
                     print("Contraseña incorrecta, no se puede registrar")
-                    #FALTA VER QUE ERROR SE PONE AQUÍ
+                    response = '400 Bad Request\r\n\r\n'
+                    self.wfile.write(bytes(response, 'utf-8'))
+                    self.wlogsent(IP, port, response.replace('\r\n', ' '))
 
-            elif not 'Authorization:' in request:
+            elif not 'Authorization:' in request and validez_port == 'valido':
                 nonce = random.randint(0, 999999999999999999999)
                 response = 'SIP/2.0 401 Unathorized\r\n\r\n'
                 response += 'WWW Authenticate: Digest nonce="' + str(nonce) + '"' + '\r\n\r\n'
@@ -178,32 +239,49 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
             self.wlogsent(IP, port, response.replace('\r\n', ' '))
 
 
-        else:
+        elif request[0] != 'REGISTER' and validez_ip == 'valida':
             # ENVIO A LA DIRECCIÓN QUE ESTÁ EN LA INVITACIÓN
             port = str(self.client_address[1])
-            address = request[1][request[1].find(':')+1:]
+            inv_address = request[1][request[1].find(':')+1:]
+            self.conver_participants.append(inv_address)
+
             print('---------------------- PRUEBAS CABECERA ADICIONAL')
 
             if request[0] == 'INVITE':
                 princip = self.aditionalheader(lines[0], '')
                 final_messg = princip + lines[1] + '\r\n' + ''.join(lines[2:])
+                sender_address = request[6][request[6].find("=")+1:]
+                self.conver_participants.append(sender_address)
+                registered = self.checkregistered(sender_address)
+            elif request[0] == 'BYE':
+                participant = self.checkifparticipant(inv_address, self.conver_participants)
+                final_messg = self.aditionalheader(prueba)
             else:
                 final_messg = self.aditionalheader(prueba)
-            print(final_messg)
 
-            try:
-                invited_ip = self.client_dicc[address][0]
-                invited_port = self.client_dicc[address][1]
+            print(self.conver_participants)
 
-                prueba = final_messg
-                backsend = self.resend('', int(invited_port), prueba) 
-            except KeyError:
-                self.wfile.write(b'SIP/2.0 404 User Not Found\r\n')
-                self.wlogsent(IP, port, "SIP/2.0 404 User Not Found")
-                print('Enviamos 404 user not found')
+            if registered == 'ok' or request[0] == 'ACK' or participant == 'yes':
+                try:
+                    print("Todo correcto, reenviamos: " + final_messg)
+                    invited_ip = self.client_dicc[inv_address][0]
+                    invited_port = self.client_dicc[inv_address][1]
+
+                    prueba = final_messg
+                    backsend = self.resend('', int(invited_port), prueba) 
+                    self.wlogsent(invited_ip, str(invited_port), prueba1)
+                except KeyError:
+                    self.wfile.write(b'SIP/2.0 404 User Not Found\r\n')
+                    self.wlogsent(IP, port, "SIP/2.0 404 User Not Found")
+                    print('Enviamos 404 user not found')
+
+            elif registered == 'no':
+                response = 'SIP/2.0 401 Unathorized\r\n\r\n'
+                self.wfile.write(bytes(response, 'utf-8'))
+                self.wlogsent(IP, port, response.replace('\r\n', ' '))
+                print("Usuario que intenta enviar invite no está registrado")
 
             self.wlogrecv(IP, port, prueba1)
-            self.wlogsent(invited_ip, str(invited_port), prueba1)
 
             # SI LA RESPUESTA A RESEND TIENE ALGO, LA ENVIO DE VUELTA
             if backsend != '':
@@ -216,6 +294,12 @@ class EchoHandler(socketserver.DatagramRequestHandler, Proxy):
                 self.wlogrecv(IP, port, backsend.replace('\r\n', ' '))
                 self.wlogsent(IP, port, backsend.replace('\r\n', ' '))
                 self.wfile.write(bytes(final_mssg, 'utf-8'))
+
+        elif validez_ip == 'no valida':
+            print("Valor de IP no válida")
+            response = 'SIP/2.0 400 Bad Request\r\n\r\n'
+            self.wfile.write(bytes(response, 'utf-8'))
+            self.logfile('Error: Not a valid IP')
 
         registerfile = self.xml_dicc['database']['path']     
         self.json2registered(registerfile, self.client_dicc)

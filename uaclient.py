@@ -44,13 +44,8 @@ class UAClient:
         recv_event = "Received from " + ip + ":" + port + ": " + extra
         self.logfile(recv_event)
 
-    def building_sip(self):
+    def building_sip(self, username='', rtp_port='', my_ip='', my_port=''):
         self.config()
-
-        username = str(self.xml_dicc['account']['username'])
-        rtp_port = self.xml_dicc['rtpaudio']['puerto']
-        my_ip = self.xml_dicc['uaserver']['ip']
-        my_port = self.xml_dicc['uaserver']['puerto']
      
         method = sys.argv[2]
         option = sys.argv[3]
@@ -84,13 +79,19 @@ if __name__ == "__main__":
     client = UAClient()
     dicc = client.config()
     client.logfile('Starting...')
-    sip_message = client.building_sip()
 
     proxy_ip = dicc['regproxy']['ip']
     proxy_port = dicc['regproxy']['puerto']
     password = dicc['account']['passwd']
-    myrtp_port = dicc['rtpaudio']['puerto']
+    rtp_port = dicc['rtpaudio']['puerto']
     my_ip = dicc['uaserver']['ip']
+    username = dicc['account']['username']
+    my_port = dicc['uaserver']['puerto']
+    
+    if my_ip == '':
+        my_ip = '127.0.0.1'
+
+    sip_message = client.building_sip(username, rtp_port, my_ip, my_port)
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
@@ -150,8 +151,8 @@ if __name__ == "__main__":
                 print("Vamos a ejecutar: " + aEjecutar)
                 os.system(aEjecutar)
 
-                escuchar = 'cvlc rtp://@' + my_ip + ':' + myrtp_port
-                os.system(escuchar)
+                escuchar = 'cvlc rtp://@' + my_ip + ':' + rtp_port
+                #os.system(escuchar)
 
     client.logfile('Finishing...') 
 
